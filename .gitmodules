@@ -1,0 +1,3 @@
+[submodule "libs/algotradelib"]
+	path = libs/algotradelib
+	url = https://github.com/ygeunkim/algotradelib.git
