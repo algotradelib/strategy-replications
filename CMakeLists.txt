@@ -24,5 +24,5 @@ target_link_libraries(strategy_replications INTERFACE algotradelib::algotradelib
 # # A second argument is required because the source directory may sit outside this project tree.
 # add_subdirectory("${ALGOTRADELIB_DIR}" algotradelib-build)
 
-# add_executable(strategy_replications src/main.cpp)
-# target_link_libraries(strategy_replications PRIVATE algotradelib::algotradelib)
+# add_executable(main src/main.cpp)
+# target_link_libraries(main PRIVATE strategy_replications)
