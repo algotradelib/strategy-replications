@@ -17,8 +17,12 @@ if(NOT EXISTS "${ALGOTRADELIB_DIR}/CMakeLists.txt")
         "or configure with -DALGOTRADELIB_DIR=/path/to/algotradelib.")
 endif()
 
-# A second argument is required because the source directory may sit outside this project tree.
-add_subdirectory("${ALGOTRADELIB_DIR}" algotradelib-build)
+add_library(strategy_replications INTERFACE)
+target_include_directories(strategy_replications INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(strategy_replications INTERFACE algotradelib::algotradelib)
 
-add_executable(strategy_replications src/main.cpp)
-target_link_libraries(strategy_replications PRIVATE algotradelib::algotradelib)
+# # A second argument is required because the source directory may sit outside this project tree.
+# add_subdirectory("${ALGOTRADELIB_DIR}" algotradelib-build)
+
+# add_executable(strategy_replications src/main.cpp)
+# target_link_libraries(strategy_replications PRIVATE algotradelib::algotradelib)
