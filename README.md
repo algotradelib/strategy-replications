@@ -1,32 +1,24 @@
-# strategy_replications
+# strategy-replications
 
-A strategy built on [algotradelib](https://github.com/ygeunkim/algotradelib), replayed beside the library's own.
+Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies and Their Rationale*. Wiley](https://www.amazon.com/dp/1118460146?lv=shuf&channelId=500&plpRedirect=mhFallback), using C++.
 
-## Build and run
-
-```sh
-cmake -S . -B build
-cmake --build build
-./build/strategy_replications
-```
-
-The generated program needs no credentials and reaches no network: its bars are built in code, so it
-prints the same table on every machine.
-
-## Where your code goes
-
-`src/main.cpp` holds `MyStrategy`. That struct is yours; everything around it is the harness that
-feeds it bars and prints the comparison. Two things to keep when you rewrite it:
-
-- **Handlers stay templates.** `template <class Ctx> void on_bar(Ctx&, const strategy::BarEvent&)`
-  is what lets one strategy run in a backtest, in a dry run and in a live session without being
-  rewritten. `ATL_ASSERT_STRATEGY` checks it at compile time.
-- **Emit a target position, not an order.** A strategy emitting orders has to remember whether it
-  already entered, and after a restart it does not know. Stating the position you want leaves that to
-  reconciliation, which can see the portfolio and the working orders.
-
-## Your own data
-
-This library does not read files, on purpose: bars come from a broker adapter or from your own code.
-Replace `closes()` with your history, keeping prices in `Decimal64` so nothing rounds on the way in.
-See "Using it" on the library's documentation main page (`doxygen/index.md`) for the two routes.
+- [ ] Time series analytics (chapter 2)
+  - [ ] Augmented Dickey-Fuller Test
+  - [ ] Hurst Exponent and Variance Ratio Test
+  - [ ] Half-life of Mean Reversion
+  - [ ] Cointegration and Johansen Test for Cointegration
+- [ ] Mean Reversion Strategies (chapter 3)
+  - [ ] Linear mean-reverting
+  - [ ] Bollinger Bands and Scaling-in
+  - [ ] Kalman Filter
+- [ ] Mean Reversion of Stocks and ETFs (chapter 4)
+  - [ ] Buy-on-Gap Model
+  - [ ] Cross-Sectional Linear Long-Short
+  - [ ] Arbitrage between an ETF and Component Stocks
+- [ ] Interday Momentum Strategies (chapter 6)
+  - [ ] Time series momentum
+  - [ ] Cross-sectional momentum
+- [ ] Mean Reversion of Currencies and Futures (chapter 5)
+  - [ ] Trading Currency Cross-Rates
+  - [ ] Trading Futures Calendar Spread
+  - [ ] Volatility futures versus Equity index futures
