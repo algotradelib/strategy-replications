@@ -1,0 +1,4 @@
+#pragma once
+
+// #include <algotradelib/vanilla>
+#include "./src/reversion/kalman_reversion.hpp"

@@ -59,7 +59,7 @@ public:
 	 * @param y Measurement
 	 * @param x Instrument
 	 */
-	void fit(Eigen::Ref<Eigen::VectorXd> y, Eigen::Ref<const Eigen::VectorXd> x) {
+	void fit(Eigen::Ref<const Eigen::VectorXd> y, Eigen::Ref<const Eigen::VectorXd> x) {
 		int sample_size = y.size();
 		for (int i = 0; i < sample_size; ++i) {
 			on_predict(y[i], x[i]);
@@ -93,7 +93,7 @@ private:
 	 * @param y_t Measurement at time t
 	 * @param x_t Instrument at time t
 	 */
-	void on_predict(math::Scalar& y_t, const math::Scalar& x_t) {
+	void on_predict(const math::Scalar& y_t, const math::Scalar& x_t) {
 		x_t_[0] = x_t;
 		x_t_[1] = 1.0;
 		R_t_ += V_w_;
@@ -106,7 +106,7 @@ private:
 	 * 
 	 * @param y_t Measurement at time t
 	 */
-	void on_correct(math::Scalar& y_t) {
+	void on_correct(const math::Scalar& y_t) {
 		Eigen::Vector2d K_t = R_t_ * x_t_ / Q_t_; // 3.13
 		e_t_ = y_t - y_hat_;
 		beta_ += K_t * e_t_;
