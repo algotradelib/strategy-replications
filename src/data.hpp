@@ -9,7 +9,7 @@
 #include <algotradelib/math>
 
 // #include <iostream>
-#include <unordered_map>
+// #include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -19,8 +19,8 @@
 namespace strategy_replications {
 
 struct TimeSeriesData {
-  // std::vector<std::string> names_;
-	std::unordered_map<std::string, size_t> names_;
+  std::vector<std::string> names_;
+	// std::unordered_map<std::string, size_t> names_;
   std::vector<int> dates_; // yyyymmdd
   Eigen::MatrixXd values_;
 };
@@ -32,7 +32,7 @@ inline TimeSeriesData load_csv(const std::string& path) {
 	}
 	TimeSeriesData data_frame;
 	std::string line, cell;
-	int num_cols = 0;
+	// int num_cols = 0;
 	if (std::getline(file, line)) {
 		std::stringstream header(line);
 		std::getline(header, cell, ',');
@@ -40,12 +40,12 @@ inline TimeSeriesData load_csv(const std::string& path) {
 			while (!cell.empty() && (cell.back() == '\r' || cell.back() == ' ')) {
 				cell.pop_back();
 			}
-			// data_frame.names_.push_back(cell);
-			data_frame.names_.emplace(cell, num_cols);
-			++num_cols;
+			data_frame.names_.push_back(cell);
+			// data_frame.names_.emplace(cell, num_cols);
+			// ++num_cols;
 		}
 	}
-	// int num_cols = data_frame.names_.size();
+	int num_cols = data_frame.names_.size();
 	std::vector<double> vals;
 	while (std::getline(file, line)) {
 		if (line.empty()) {
