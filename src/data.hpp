@@ -10,6 +10,7 @@
 
 // #include <iostream>
 // #include <unordered_map>
+#include <cstddef>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -22,7 +23,16 @@ struct TimeSeriesData {
   std::vector<std::string> names_;
 	// std::unordered_map<std::string, size_t> names_;
   std::vector<int> dates_; // yyyymmdd
+	std::vector<std::vector<std::string>> cell_; // values of string types
   Eigen::MatrixXd values_;
+
+	std::size_t col(const std::string& name) {
+		auto it = std::find(names_.begin(), names_.end(), name);
+		if (it != names_.end()) {
+			return it - names_.begin();
+		}
+		throw std::runtime_error("Could not find " + name);
+	}
 };
 
 inline TimeSeriesData load_csv(const std::string& path) {
@@ -46,6 +56,7 @@ inline TimeSeriesData load_csv(const std::string& path) {
 		}
 	}
 	int num_cols = data_frame.names_.size();
+	data_frame.cell_.resize(num_cols);
 	std::vector<double> vals;
 	while (std::getline(file, line)) {
 		if (line.empty()) {
@@ -61,6 +72,7 @@ inline TimeSeriesData load_csv(const std::string& path) {
 				cell.pop_back();
 			}
 			const bool missing = cell.empty() || cell == "NaN" || cell == "nan";
+			data_frame.cell_[i].push_back(missing ? std::string() : cell);
 			vals.push_back(missing ? std::numeric_limits<double>::quiet_NaN() : std::stod(cell));
 		}
 	}
