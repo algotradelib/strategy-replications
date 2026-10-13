@@ -10,7 +10,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
 - [ ] Mean Reversion Strategies (chapter 3)
   - [ ] Linear mean-reverting
   - [x] Bollinger Bands - same as `vanilla::ZScoreReversion`
-  - [ ] Kalman Filter
+  - [x] Kalman Filter
 - [ ] Mean Reversion of Stocks and ETFs (chapter 4)
   - [ ] Buy-on-Gap Model
   - [ ] Cross-Sectional Linear Long-Short
