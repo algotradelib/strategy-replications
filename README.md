@@ -9,7 +9,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Cointegration and Johansen Test for Cointegration
 - [ ] Mean Reversion Strategies (chapter 3)
   - [ ] Linear mean-reverting
-  - [x] Bollinger Bands - same as `vanilla::ZScoreReversion`
+  - [ ] Bollinger Bands - same as `vanilla::ZScoreReversion`
   - [x] Kalman Filter
 - [ ] Mean Reversion of Stocks and ETFs (chapter 4)
   - [ ] Buy-on-Gap Model
@@ -22,3 +22,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Trading Currency Cross-Rates
   - [ ] Trading Futures Calendar Spread
   - [ ] Volatility futures versus Equity index futures
+
+```bash
+build/bin/atl_strategy -s <strategy_name> -d <data_path> ...
+```
