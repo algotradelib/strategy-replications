@@ -23,7 +23,7 @@ struct TimeSeriesData {
   std::vector<std::string> names_;
 	// std::unordered_map<std::string, size_t> names_;
   std::vector<int> dates_; // yyyymmdd
-	std::vector<std::vector<std::string>> cell_; // values of string types
+	std::vector<std::vector<std::string>> cell_; // string types of values_.transpose()
   Eigen::MatrixXd values_;
 
 	std::size_t col(const std::string& name) {

@@ -18,11 +18,15 @@ if(NOT EXISTS "${ALGOTRADELIB_DIR}/CMakeLists.txt")
 endif()
 
 add_library(strategy_replications INTERFACE)
+add_library(algotradelib::strategy_replications ALIAS strategy_replications)
 target_include_directories(strategy_replications INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(strategy_replications INTERFACE algotradelib::algotradelib)
 
-# # A second argument is required because the source directory may sit outside this project tree.
-# add_subdirectory("${ALGOTRADELIB_DIR}" algotradelib-build)
+find_package(CLI11 2.6 REQUIRED)
 
-# add_executable(main src/main.cpp)
-# target_link_libraries(main PRIVATE strategy_replications)
+# A second argument is required because the source directory may sit outside this project tree.
+add_subdirectory("${ALGOTRADELIB_DIR}" algotradelib-build)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_executable(atl_strategy src/main.cpp)
+target_link_libraries(atl_strategy PRIVATE algotradelib::strategy_replications CLI11::CLI11)
