@@ -112,7 +112,6 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 		}
 	}
 	// positions *= data.values_.array();
-	std::cout << "values:\n" << data.values_.topRows<5>() << std::endl;
 	Eigen::MatrixXd pct_change = math::unobserved(num_row - 1, num_col);
 	const auto& curr = data.values_.bottomRows(num_row - 1).array();
 	const auto& prev = data.values_.topRows(num_row - 1).array();
@@ -122,8 +121,6 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 	// Eigen::MatrixXd pnl = prev * pct_change.array();
 	// Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
 	Eigen::ArrayXd pnl = (position_prev * pct_change.array()).rowwise().sum();
-	std::cout << "pnl\n" << (position_prev * pct_change.array()).topRows<5>() << "\n"
-		<< pnl.topRows<5>() << std::endl;
 	Eigen::ArrayXd ret = pnl / position_prev.cwiseAbs().rowwise().sum();
 	double apr = std::pow((1 + ret).prod(), 252 / ret.size()) - 1;
 	double ret_mean = ret.mean();
