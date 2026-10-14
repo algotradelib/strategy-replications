@@ -27,16 +27,6 @@ struct Config {
 	int trace_{0};
 };
 
-// struct Held {
-//   std::vector<std::vector<double>> shares; // [name][day]
-//   std::size_t executions{0};
-//   std::size_t refused{0};
-//   std::size_t rejected{0};
-//   std::size_t unfilled{0};
-//   std::string halted;
-//   double final_equity{0};
-// };
-
 inline backtest::ReplayConfig config_for(const std::vector<std::string>& names, const Config& configs) {
 	backtest::ReplayConfig replay;
 	replay.cash_ = Decimal64::parse(configs.cash_);
@@ -86,13 +76,16 @@ inline void replay_log(const std::string& tag, const backtest::ReplayResult& res
 		<< std::endl;
 }
 
-inline void summarize(const TimeSeriesData& data, const std::vector<std::string>& names, const backtest::ReplayResult& result, std::size_t start_day) {
+inline void summarize(TimeSeriesData& data, const std::vector<std::string>& names, const backtest::ReplayResult& result, std::size_t start_day) {
 	int num_row = data.dates_.size();
 	int num_col = names.size();
 	std::map<std::string, int> asset_idx;
-  for (int i = 0; i < num_col; ++i) {
-    asset_idx[names[i]] = i;
-  }
+  // for (int i = 0; i < num_col; ++i) {
+  //   asset_idx[names[i]] = i;
+  // }
+	for (const auto& name : names) {
+		asset_idx[name] = static_cast<int>(data.col(name)); // to follow the csv order, not names
+	}
 	Eigen::ArrayXXd positions = Eigen::ArrayXXd::Zero(num_row, num_col);
 	std::vector<double> running(num_col, 0.0);
 	std::vector<double> prices(num_col, 0.0);
@@ -122,10 +115,11 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 	// Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
 	Eigen::ArrayXd pnl = (position_prev * pct_change.array()).rowwise().sum();
 	Eigen::ArrayXd ret = pnl / position_prev.cwiseAbs().rowwise().sum();
-	double apr = std::pow((1 + ret).prod(), 252 / ret.size()) - 1;
+	ret = ret.isNaN().select(0.0, ret);
+	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();
 	// double ret_sd = std::sqrt((ret - ret_mean).matrix().norm() / (ret.size() - 1));
-	double sharpe = ret_mean * std::sqrt(252 * (ret.size() - 1) / (ret - ret_mean).matrix().norm());
+	double sharpe = ret_mean * std::sqrt(252.0 * (ret.size() - 1.0)) / (ret - ret_mean).matrix().norm();
 	std::cout << "apr=" << apr << ", sharpe=" << sharpe << std::endl;
 }
 

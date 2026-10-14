@@ -11,7 +11,7 @@ namespace strategy_replications {
 int kalman(const std::string& path, const std::vector<std::string>& names, bool shorts) {
 	auto df = load_csv(path);
   reversion::KalmanReversion kalman_reversion;
-	kalman_reversion.params_.scale_ = 1;
+	kalman_reversion.params_.scale_ = 1000;
 	kalman_reversion.params_.instrument_y_ = utils::id_of(names[0]);
 	kalman_reversion.params_.instrument_x_ = utils::id_of(names[1]);
 	backtesting::Config configs;

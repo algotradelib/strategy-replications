@@ -2,12 +2,13 @@
 
 #include <algotradelib/analytics>
 #include <algotradelib/strategy>
+#include "../statistics/kalman_filter.hpp"
+
 #include <cmath>
 #include <cstdint>
-#include "../statistics/kalman_filter.hpp"
-#include "algotradelib/src/core/types.hpp"
-#include "algotradelib/src/math/scalar.hpp"
-#include "algotradelib/src/strategy/intent.hpp"
+#include <optional>
+#include <utility>
+#include <chrono>
 
 namespace strategy_replications {
 
@@ -42,29 +43,44 @@ struct KalmanReversion {
 	Params params_;
 	bool units_long_{false};
 	bool units_short_{false};
+	std::optional<std::pair<std::chrono::system_clock::time_point, double>> y_, x_;
+	std::optional<std::chrono::system_clock::time_point> stepped_;
 	statistics::KalmanFilter kf_;
 	bool kf_initialized_{false};
 
 	template <class Ctx>
   void on_bar(Ctx& ctx, const BarEvent& bar) {
-		if (!(bar.instrument_ == params_.instrument_y_)) {
-      return; 
-    }
-    const auto* series_y = ctx.bars(params_.instrument_y_, bar.interval_);
-		const auto* series_x = ctx.bars(params_.instrument_x_, bar.interval_);
-    if (series_y == nullptr || series_x == nullptr) {
-      return;
-    }
-    const Eigen::VectorXd closes_y = series_y->column(analytics::BarField::CLOSE);
-		const Eigen::VectorXd closes_x = series_x->column(analytics::BarField::CLOSE);
+		// if (!(bar.instrument_ == params_.instrument_y_)) {
+    //   return;
+    // }
+    // const auto* series_y = ctx.bars(params_.instrument_y_, bar.interval_);
+		// const auto* series_x = ctx.bars(params_.instrument_x_, bar.interval_);
+    // if (series_y == nullptr || series_x == nullptr) {
+    //   return;
+    // }
+    // const Eigen::VectorXd closes_y = series_y->column(analytics::BarField::CLOSE);
+		// const Eigen::VectorXd closes_x = series_x->column(analytics::BarField::CLOSE);
+		const double close = analytics::to_scalar(bar.bar_.close_);
+		if (bar.instrument_ == params_.instrument_y_) {
+			y_ = {bar.bar_.timestamp_, close};
+		} else if (bar.instrument_ == params_.instrument_x_) {
+			x_ = {bar.bar_.timestamp_, close};
+		} else {
+			return;
+		}
+		if (!y_ || !x_ || y_->first != x_->first || stepped_ == y_->first) {
+			return;
+		}
+		stepped_ = y_->first;
 		if (!kf_initialized_) {
 			kf_.init(params_.delta_, params_.V_e_);
-			kf_.fit(closes_y.head(closes_y.size() - 1), closes_x.head(closes_y.size() - 1)); // Kalman filter recursions (t = 1, ..., T)
+			// kf_.fit(closes_y.head(closes_y.size() - 1), closes_x.head(closes_y.size() - 1)); // Kalman filter recursions (t = 1, ..., T)
 			kf_initialized_ = true;
 		}
-		math::Scalar price_y = closes_y[closes_y.size() - 1];
-    math::Scalar price_x = closes_x[closes_x.size() - 1];
-		kf_.forecast(price_y, price_x); // Kalman filter forecasting (t > T)
+		kf_.forecast(y_->second, x_->second);
+		// math::Scalar price_y = closes_y[closes_y.size() - 1];
+    // math::Scalar price_x = closes_x[closes_x.size() - 1];
+		// kf_.forecast(price_y, price_x); // Kalman filter forecasting (t > T)
 		math::Scalar resid = kf_.measurement_resid();
 		math::Scalar sqrt_q = kf_.measurement_sd();
 		math::Scalar hedge_ratio = kf_.hedge_ratio();
@@ -75,14 +91,12 @@ struct KalmanReversion {
 		// const bool holding = held->coefficient() != 0;
 		if (resid < -sqrt_q) {
 			units_long_ = true;
-		}
-		if (resid > 0) {
+		} else if (resid > -sqrt_q) {
 			units_long_ = false;
 		}
 		if (resid > sqrt_q) {
 			units_short_ = true;
-		}
-		if (resid < 0) {
+		} else if (resid < sqrt_q) {
 			units_short_ = false;
 		}
 		std::int64_t units = units_long_ - units_short_;

@@ -49,8 +49,9 @@ public:
 		V_e_ = V_e;
 		beta_.setZero();
 		x_t_.setZero();
-		R_t_.setZero();
+		// R_t_.setZero();
 		V_w_ = (delta / (1 - delta)) * Eigen::Matrix2d::Identity();
+		R_t_ = -V_w_;
 	}
 	
 	/**
