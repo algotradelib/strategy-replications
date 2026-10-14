@@ -76,9 +76,9 @@ inline void replay_log(const std::string& tag, const backtest::ReplayResult& res
 		<< std::endl;
 }
 
-inline void summarize(TimeSeriesData& data, const std::vector<std::string>& names, const backtest::ReplayResult& result, std::size_t start_day) {
+inline void summarize(const TimeSeriesData& data, const std::vector<std::string>& names, const backtest::ReplayResult& result, std::size_t start_day) {
 	int num_row = data.dates_.size();
-	int num_col = names.size();
+	int num_col = data.names_.size();
 	std::map<std::string, int> asset_idx;
   // for (int i = 0; i < num_col; ++i) {
   //   asset_idx[names[i]] = i;
@@ -88,28 +88,27 @@ inline void summarize(TimeSeriesData& data, const std::vector<std::string>& name
 	}
 	Eigen::ArrayXXd positions = Eigen::ArrayXXd::Zero(num_row, num_col);
 	std::vector<double> running(num_col, 0.0);
-	std::vector<double> prices(num_col, 0.0);
+	// std::vector<double> prices(num_col, 0.0);
 	int next = 0;
 	for (int day = 0; day < num_row; ++day) {
-		const auto close = utils::days_from_civil(data.dates_[day]) + std::chrono::hours(24);
+		const auto close = utils::days_from_civil(data.dates_[day]);
 		while (next < result.executions_.size() && !(close < result.executions_[next].fill_.at_)) {
 			const auto& fill = result.executions_[next].fill_;
 			const double quantity = std::stod(fill.quantity_.str());
 			running[asset_idx.at(fill.instrument_.symbol_)] += fill.side_ == OrderSide::BUY ? quantity : -quantity;
-			prices[asset_idx.at(fill.instrument_.symbol_)] = analytics::to_scalar(fill.price_);
+			// prices[asset_idx.at(fill.instrument_.symbol_)] = analytics::to_scalar(fill.price_);
 			++next;
 		}
 		for (int at = 0; at < num_col; ++at) {
-			positions(day, at) = running[at] * prices[at];
-			// positions(day, at) = running[at];
+			// positions(day, at) = running[at] * prices[at];
+			positions(day, at) = running[at];
 		}
 	}
-	// positions *= data.values_.array();
+	positions *= data.values_.array();
 	Eigen::MatrixXd pct_change = math::unobserved(num_row - 1, num_col);
 	const auto& curr = data.values_.bottomRows(num_row - 1).array();
 	const auto& prev = data.values_.topRows(num_row - 1).array();
 	const auto& position_prev = positions.topRows(num_row - 1);
-	// pct_change.bottomRows(num_row - 1) = (prev <= 0).select(math::missing(), (curr - prev) / prev);
 	pct_change = (curr - prev) / prev; // (num_row - 1) x num_col
 	// Eigen::MatrixXd pnl = prev * pct_change.array();
 	// Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
@@ -118,7 +117,7 @@ inline void summarize(TimeSeriesData& data, const std::vector<std::string>& name
 	ret = ret.isNaN().select(0.0, ret);
 	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();
-	// double ret_sd = std::sqrt((ret - ret_mean).matrix().norm() / (ret.size() - 1));
+	// double ret_sd = std::sqrt((ret - ret_mean).matrix().norm() / (ret.size() - 1.0));
 	double sharpe = ret_mean * std::sqrt(252.0 * (ret.size() - 1.0)) / (ret - ret_mean).matrix().norm();
 	std::cout << "apr=" << apr << ", sharpe=" << sharpe << std::endl;
 }

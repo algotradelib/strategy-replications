@@ -26,7 +26,7 @@ struct TimeSeriesData {
 	std::vector<std::vector<std::string>> cell_; // string types of values_.transpose()
   Eigen::MatrixXd values_;
 
-	std::size_t col(const std::string& name) {
+	std::size_t col(const std::string& name) const {
 		auto it = std::find(names_.begin(), names_.end(), name);
 		if (it != names_.end()) {
 			return it - names_.begin();
