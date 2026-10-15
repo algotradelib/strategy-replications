@@ -16,7 +16,7 @@ enum class OlsAlgo {
 };
 
 template <typename ResponseType = Eigen::VectorXd, OlsAlgo Algo = OlsAlgo::LLT>
-inline ResponseType fit_ols(Eigen::Ref<ResponseType> y, Eigen::Ref<Eigen::MatrixXd> x) {
+inline ResponseType fit_ols(Eigen::Ref<const ResponseType> y, Eigen::Ref<const Eigen::MatrixXd> x) {
 	if constexpr (Algo == OlsAlgo::NORMAL) {
 		// beta_ = (x_.transpose() * x_).solve(x_.transpose() * y_);
 		return (x.transpose() * x).ldlt().solve(x.transpose() * y);

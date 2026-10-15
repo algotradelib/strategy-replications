@@ -77,7 +77,9 @@ struct BollingerBand {
 		}
 		Eigen::VectorXd window_y = closes_y.tail(params_.lookback_);
 		Eigen::VectorXd window_x = closes_x.tail(params_.lookback_);
-		double hedge_ratio = statistics::fit_ols<Eigen::VectorXd, statistics::OlsAlgo::LLT>(window_y, window_x)[0];
+		Eigen::Matrix<double, Eigen::Dynamic, 2> design(params_.lookback_, 2);
+		design << window_x, Eigen::VectorXd::Ones(params_.lookback_);
+		double hedge_ratio = statistics::fit_ols<Eigen::VectorXd, statistics::OlsAlgo::LLT>(window_y, design)[0];
 		// Eigen::VectorXd hedge_ratio(trailed_size);
 		// for (int i = 0; i < trailed_size; ++i) {
 		// 	hedge_ratio[i] = statistics::fit_ols<Eigen::VectorXd, statistics::OlsAlgo::LLT>(
