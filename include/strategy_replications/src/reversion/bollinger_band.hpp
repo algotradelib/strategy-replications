@@ -27,8 +27,8 @@ namespace reversion {
  */
 struct BollingerBand {
 	struct Params {
-		InstrumentId instrument_y_; // GLD in the textbook
-    InstrumentId instrument_x_; // USO in the textbook
+		InstrumentId instrument_y_; // USO in the textbook
+    InstrumentId instrument_x_; // GLD in the textbook
     std::size_t lookback_{20};
     math::Scalar entry_{1.0};
     math::Scalar exit_{0.0};
@@ -39,11 +39,10 @@ struct BollingerBand {
   Params params_;
 	bool units_long_{false};
 	bool units_short_{false};
-	// std::optional<std::pair<std::chrono::system_clock::time_point, double>> y_, x_;
-	// std::optional<std::chrono::system_clock::time_point> stepped_;
 	std::optional<std::chrono::system_clock::time_point> stepped_y_, stepped_x_;
 	// statistics::Ols<Eigen::VectorXd> ols_;
 	// bool ols_initialized_{false};
+	std::vector<double> spread_;
 
 	template <class Ctx>
   void on_bar(Ctx& ctx, const BarEvent& bar) {
@@ -87,10 +86,15 @@ struct BollingerBand {
 		// 		closes_x.segment(i, params_.lookback_)
 		// 	)[0];
 		// }
-		Eigen::VectorXd spread = window_y.array() - hedge_ratio * window_x.array();
-		double mean = spread.mean();
-		double sd = (spread.array() - mean).matrix().norm() / std::sqrt((params_.lookback_ - 1.0));
-		double zscore = sd > 0 ? (spread[params_.lookback_ - 1] - mean) / sd : math::undefined();
+		spread_.push_back(window_y[params_.lookback_ - 1] - hedge_ratio * window_x[params_.lookback_ - 1]);
+		if (spread_.size() <= params_.lookback_) {
+			return; // warm-up
+		}
+		Eigen::Map<const Eigen::VectorXd> spread(spread_.data() + spread_.size() - params_.lookback_, params_.lookback_);
+		// Eigen::VectorXd spread = window_y.array() - hedge_ratio * window_x.array();
+		const double mean = spread.mean();
+		const double sd = (spread.array() - mean).matrix().norm() / std::sqrt((params_.lookback_ - 1.0));
+		const double zscore = sd > 0 ? (spread[params_.lookback_ - 1] - mean) / sd : math::undefined();
 		if (!math::is_undefined(zscore)) {
 			if (zscore < -params_.entry_) {
 				units_long_ = true;
