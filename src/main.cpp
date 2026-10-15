@@ -1,3 +1,4 @@
+#include "./bollinger.hpp"
 #include "./kalman.hpp"
 #include <CLI/CLI.hpp>
 #include <iostream>
@@ -37,7 +38,7 @@ int main(int argc, char** argv) {
 	CLI11_PARSE(app, argc, argv);
 	switch (strategy_tag) {
 		case Strategy::BOLLINGER:
-			break;
+			return strategy_replications::bollinger(path, variables, shorts);
 		case Strategy::KALMAN:
 			return strategy_replications::kalman(path, variables, shorts);
 	}

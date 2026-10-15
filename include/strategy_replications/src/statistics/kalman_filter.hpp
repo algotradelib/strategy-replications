@@ -1,13 +1,13 @@
 #pragma once
 
 #include "algotradelib/src/math/scalar.hpp"
-#if !defined(ATL_USE_EIGEN)
-	#define ATL_USE_EIGEN
-#endif // ATL_USE_EIGEN
+// #if !defined(ATL_USE_EIGEN)
+// 	#define ATL_USE_EIGEN
+// #endif // ATL_USE_EIGEN
 
-#if !defined(ATL_HAS_EIGEN)
-	#define ATL_HAS_EIGEN
-#endif // ATL_HAS_EIGEN
+// #if !defined(ATL_HAS_EIGEN)
+// 	#define ATL_HAS_EIGEN
+// #endif // ATL_HAS_EIGEN
 
 #include <algotradelib/analytics>
 // #include <boost/random/normal_distribution.hpp>
@@ -118,5 +118,5 @@ private:
 	}
 };
 
-} // namespace reversion
+} // namespace statistics
 } // namespace strategy_replications
