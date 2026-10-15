@@ -9,8 +9,8 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Cointegration and Johansen Test for Cointegration
 - [ ] Mean Reversion Strategies (chapter 3)
   - [ ] Linear mean-reverting
-  - [ ] Bollinger Bands - same as `vanilla::ZScoreReversion`
-  - [x] Kalman Filter
+  - [x] Bollinger Bands (`bollinger`)
+  - [x] Kalman Filter (`kalman`)
 - [ ] Mean Reversion of Stocks and ETFs (chapter 4)
   - [ ] Buy-on-Gap Model
   - [ ] Cross-Sectional Linear Long-Short
