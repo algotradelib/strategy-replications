@@ -49,16 +49,16 @@ struct KalmanReversion {
 
 	template <class Ctx>
 	void on_bars(Ctx& ctx, const BarSlice& slice) {
-		const auto* y = slice.find(params_.instrument_y_);
-		const auto* x = slice.find(params_.instrument_x_);
-		if (y == nullptr || x == nullptr) {
+		const auto* bar_y = slice.find(params_.instrument_y_);
+		const auto* bar_x = slice.find(params_.instrument_x_);
+		if (bar_y == nullptr || bar_x == nullptr) {
 			return;
 		}
 		if (!kf_initialized_) {
 			kf_.init(params_.delta_, params_.V_e_);
 			kf_initialized_ = true;
 		}
-		kf_.forecast(analytics::to_scalar(y->bar_.close_), analytics::to_scalar(x->bar_.close_));
+		kf_.forecast(analytics::to_scalar(bar_y->bar_.close_), analytics::to_scalar(bar_x->bar_.close_));
 		math::Scalar resid = kf_.measurement_resid();
 		math::Scalar sqrt_q = kf_.measurement_sd();
 		math::Scalar hedge_ratio = kf_.hedge_ratio();
