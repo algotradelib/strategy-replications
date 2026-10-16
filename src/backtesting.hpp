@@ -55,6 +55,7 @@ backtest::Backtester<Strategy> replay(Strategy strategy, TimeSeriesData& data, c
   for (const auto& name : names) {
 		columns.push_back(data.col(name));
 	}
+  std::vector<std::optional<Decimal64>> previous(names.size());
   for (std::size_t day = 0; day < data.dates_.size(); ++day) {
     for (std::size_t at = 0; at < names.size(); ++at) {
 			// const auto& text = data.cell_[data.col(names[at])][day];
@@ -62,7 +63,20 @@ backtest::Backtester<Strategy> replay(Strategy strategy, TimeSeriesData& data, c
       if (text.empty()) {
 				continue;
 			}
-      engine.feed(strategy::make_bar_event(utils::id_of(names[at]), BarInterval::ONE_DAY, BarStamp::CLOSE, utils::bar_of(data.dates_[day], text)));
+      auto bar = utils::bar_of(data.dates_[day], text);
+			// Each bar opens at the previous close, so a market order decided at close t fills at close t (the book's convention),
+			// and summarize counts it as held from that close.
+      if (previous[at]) {
+        bar.open_ = *previous[at];
+        if (atl::decimal_less(*previous[at], bar.low_)) {
+					bar.low_ = *previous[at];
+				}
+        if (atl::decimal_less(bar.high_, *previous[at])) {
+					bar.high_ = *previous[at];
+				}
+      }
+      previous[at] = bar.close_;
+      engine.feed(strategy::make_bar_event(utils::id_of(names[at]), BarInterval::ONE_DAY, BarStamp::CLOSE, bar));
     }
   }
   engine.finish();
@@ -91,7 +105,7 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 	// std::vector<double> prices(num_col, 0.0);
 	int next = 0;
 	for (int day = 0; day < num_row; ++day) {
-		const auto close = utils::days_from_civil(data.dates_[day]);
+		const auto close = day + 1 < num_row ? utils::days_from_civil(data.dates_[day + 1]) : utils::days_from_civil(data.dates_[day]);
 		while (next < result.executions_.size() && !(close < result.executions_[next].fill_.at_)) {
 			const auto& fill = result.executions_[next].fill_;
 			const double quantity = std::stod(fill.quantity_.str());
