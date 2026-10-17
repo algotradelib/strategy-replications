@@ -23,7 +23,7 @@ namespace reversion {
 /**
  * @brief Bollinger band strategy
  * 
- * Pair trading in Example 3.1
+ * Pair trading in Example 3.2
  * 
  */
 struct BollingerBand {
