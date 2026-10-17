@@ -12,7 +12,7 @@ set(ALGOTRADELIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/algotradelib"
 if(NOT EXISTS "${ALGOTRADELIB_DIR}/CMakeLists.txt")
     message(FATAL_ERROR
         "No algotradelib checkout at ${ALGOTRADELIB_DIR}. Add it as a submodule:\n"
-        "    git submodule add https://github.com/ygeunkim/algotradelib.git libs/algotradelib\n"
+        "    git submodule add https://github.com/algotradelib/algotradelib.git libs/algotradelib\n"
         "    git submodule update --init --recursive\n"
         "or configure with -DALGOTRADELIB_DIR=/path/to/algotradelib.")
 endif()
