@@ -1,3 +1,4 @@
+#include "./linear.hpp"
 #include "./bollinger.hpp"
 #include "./kalman.hpp"
 #include <CLI/CLI.hpp>
@@ -8,6 +9,9 @@
 namespace {
 
 enum class Strategy : int {
+	LINEAR,
+	LINEAR_LOG,
+	RATIO,
 	BOLLINGER,
 	KALMAN,
 };
@@ -18,6 +22,9 @@ int main(int argc, char** argv) {
   CLI::App app{"Book examples"};
 	Strategy strategy_tag;
 	std::map<std::string, Strategy> strategy_map{
+		{"linear", Strategy::LINEAR},
+		{"linear-log", Strategy::LINEAR_LOG},
+		{"ratio", Strategy::RATIO},
 		{"bollinger", Strategy::BOLLINGER},
 		{"kalman", Strategy::KALMAN}
 	};
@@ -37,6 +44,12 @@ int main(int argc, char** argv) {
 	app.add_flag("--no-shorts", shorts, "Do not use shorts if specified");
 	CLI11_PARSE(app, argc, argv);
 	switch (strategy_tag) {
+		case Strategy::LINEAR:
+			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::PRICE>(path, variables, shorts);
+		case Strategy::LINEAR_LOG:
+			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::LOG>(path, variables, shorts);
+		case Strategy::RATIO:
+			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::RATIO>(path, variables, shorts);
 		case Strategy::BOLLINGER:
 			return strategy_replications::bollinger(path, variables, shorts);
 		case Strategy::KALMAN:
