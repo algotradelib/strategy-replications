@@ -1,6 +1,7 @@
 #include "./linear.hpp"
 #include "./bollinger.hpp"
 #include "./kalman.hpp"
+#include "./buy_on_gap.hpp"
 #include <CLI/CLI.hpp>
 #include <iostream>
 #include <map>
@@ -14,6 +15,7 @@ enum class Strategy : int {
 	RATIO,
 	BOLLINGER,
 	KALMAN,
+	BUYONGAP,
 };
 
 } // namespace
@@ -26,7 +28,8 @@ int main(int argc, char** argv) {
 		{"linear-log", Strategy::LINEAR_LOG},
 		{"ratio", Strategy::RATIO},
 		{"bollinger", Strategy::BOLLINGER},
-		{"kalman", Strategy::KALMAN}
+		{"kalman", Strategy::KALMAN},
+		{"bog", Strategy::BUYONGAP}
 	};
 	std::string path;
 	// std::string y_name, x_name;
@@ -54,6 +57,8 @@ int main(int argc, char** argv) {
 			return strategy_replications::bollinger(path, variables, shorts);
 		case Strategy::KALMAN:
 			return strategy_replications::kalman(path, variables, shorts);
+		case Strategy::BUYONGAP:
+			return strategy_replications::buy_on_gap(path);
 	}
   return 0;
 }
