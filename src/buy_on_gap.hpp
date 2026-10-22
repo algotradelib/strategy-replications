@@ -68,7 +68,7 @@ int buy_on_gap(const std::string& directory) {
 	for (int i = t_start; i < num_row; ++i) {
 		cl_ret_sum += pct_change.row(i - 1).array() - pct_change.row(i - 1 - window).array();
 		cl_ret_ss += pct_change.row(i - 1).array().square() - pct_change.row(i - 1 - window).array().square();
-		cl_ret_sd = (cl_ret_ss - (cl_ret_sum / window).square()).sqrt();
+		cl_ret_sd = ((cl_ret_ss - cl_ret_sum.square() / window) / (window - 1)).sqrt();
 		// cl_ma = close.values_.middleRows(i - lookback, lookback).colwise().mean();
 		cl_sum += close.values_.row(i).array() - close.values_.row(i - lookback).array();
 		curr_open = open.values_.row(i).array();
@@ -76,12 +76,19 @@ int buy_on_gap(const std::string& directory) {
 		// ret_gap = (open.values_.row(i).array() - low.values_.row(i - 1).array()) / low.values_.row(i - 1).array();
 		ret_gap = (curr_open - prev_low) / prev_low;
 		// gapped = (curr_open < prev_low * (1 - entry * cl_ret_sd)) * (curr_open > cl_sum / window);
-		gapped = ret_gap.isFinite() * (curr_open < prev_low * (1 - entry * cl_ret_sd)) * (curr_open > cl_sum / window);
+		gapped = ret_gap.isFinite() * (curr_open < prev_low * (1 - entry * cl_ret_sd)) * (curr_open > cl_sum / lookback);
 		num_gapped = gapped.count();
 		if (num_gapped > top) {
 			std::iota(ret_id.data(), ret_id.data() + ret_id.size(), 0);
 			std::nth_element(ret_id.data(), ret_id.data() + top, ret_id.data() + ret_id.size(),
-				[&ret_gap](int i1, int i2) { return ret_gap(i1) > ret_gap(i2); }
+				[&gapped, &ret_gap](int i1, int i2) {
+					const bool gapped1 = gapped(i1);
+					const bool gapped2 = gapped(i2);
+					if (gapped1 != gapped2) {
+						return gapped1;
+					}
+					return gapped1 && ret_gap(i1) > ret_gap(i2);
+				}
 			);
 			positions.row(i - t_start)(ret_id(Eigen::seqN(0, top))) = 1.0;
 		} else if (num_gapped > 0) {
@@ -89,6 +96,7 @@ int buy_on_gap(const std::string& directory) {
 		}
 	}
 	Eigen::ArrayXXd ret_oc = ((close.values_.array() - open.values_.array()) / open.values_.array()).bottomRows(num_row - t_start);
+	ret_oc = ret_oc.isNaN().select(0.0, ret_oc);
 	Eigen::ArrayXd pnl = (positions * ret_oc).rowwise().sum();
 	Eigen::ArrayXd ret = pnl / top;
 	// ret = ret.isNaN().select(0.0, ret);
