@@ -84,4 +84,28 @@ inline TimeSeriesData load_csv(const std::string& path) {
 	return data_frame;
 }
 
+inline TimeSeriesData load_ohlc(const std::string& directory, const std::string& kind) {
+	auto df = load_csv(directory + "/inputDataOHLCDaily_20120424_" + kind + ".csv");
+	std::ifstream file(directory + "/inputDataOHLCDaily_20120424_stocks.csv");
+	std::string line;
+	std::getline(file, line);
+	std::getline(file, line);
+	std::vector<std::string> names;
+	std::size_t from = 0;
+	while (true) {
+		const auto to = line.find(',', from);
+		auto cell = line.substr(from, to == std::string::npos ? std::string::npos : to - from);
+		while (!cell.empty() && (cell.back() == '\r' || cell.back() == ' ')) {
+			cell.pop_back();
+		}
+		names.push_back(cell);
+		if (to == std::string::npos) {
+			break;
+		}
+		from = to + 1;
+	}
+	df.names_ = names;
+	return df;
+}
+
 } // namespace strategy_replications

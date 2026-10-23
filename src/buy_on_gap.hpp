@@ -8,43 +8,15 @@
 
 namespace strategy_replications {
 
-namespace detail {
-
-inline TimeSeriesData load_ohlc(const std::string& directory, const std::string& kind) {
-	auto df = load_csv(directory + "/inputDataOHLCDaily_20120424_" + kind + ".csv");
-	std::ifstream file(directory + "/inputDataOHLCDaily_20120424_stocks.csv");
-	std::string line;
-	std::getline(file, line);
-	std::getline(file, line);
-	std::vector<std::string> names;
-	std::size_t from = 0;
-	while (true) {
-		const auto to = line.find(',', from);
-		auto cell = line.substr(from, to == std::string::npos ? std::string::npos : to - from);
-		while (!cell.empty() && (cell.back() == '\r' || cell.back() == ' ')) {
-			cell.pop_back();
-		}
-		names.push_back(cell);
-		if (to == std::string::npos) {
-			break;
-		}
-		from = to + 1;
-	}
-	df.names_ = names;
-	return df;
-}
-
-} // namespace detail
-
 int buy_on_gap(const std::string& directory) {
 	int top_ = 10;
 	int lookback_ = 20;
 	int window_ = 90;
 	double entry_ = 1.0;
-	auto open = detail::load_ohlc(directory, "op");
-	auto high = detail::load_ohlc(directory, "hi");
-	auto low = detail::load_ohlc(directory, "lo");
-	auto close = detail::load_ohlc(directory, "cl");
+	auto open = load_ohlc(directory, "op");
+	auto high = load_ohlc(directory, "hi");
+	auto low = load_ohlc(directory, "lo");
+	auto close = load_ohlc(directory, "cl");
 	int num_row = close.dates_.size();
 	int num_col = close.names_.size();
 	int t_start = std::max(window_ + 1, lookback_);
