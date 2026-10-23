@@ -33,6 +33,32 @@ struct TimeSeriesData {
 		}
 		throw std::runtime_error("Could not find " + name);
 	}
+
+	void slice_dates(int from, int to) {
+    const auto first = std::lower_bound(dates_.begin(), dates_.end(), from);
+    const auto last = std::upper_bound(first, dates_.end(), to);
+    // const auto begin = static_cast<Eigen::Index>(first - dates_.begin());
+    // const auto count = static_cast<Eigen::Index>(last - first);
+    // TimeSeriesData out;
+    // out.names_ = df.names_;
+    // out.dates_.assign(first, last);
+    // out.values_ = df.values_.middleRows(begin, count);
+    // out.cell_.reserve(df.cell_.size());
+    // for (const auto& column : df.cell_) {
+    //   out.cell_.emplace_back(column.begin() + begin, column.begin() + begin + count);
+    // }
+		const auto begin = first - dates_.begin();
+		const auto end = last - dates_.begin();
+		const auto count = end - begin;
+		Eigen::MatrixXd kept = values_.middleRows(begin, count);
+  	values_ = std::move(kept);
+		for (auto& column : cell_) {
+			column.erase(column.begin() + end, column.end());
+			column.erase(column.begin(), column.begin() + begin);
+		}
+		dates_.erase(last, dates_.end());
+		dates_.erase(dates_.begin(), dates_.begin() + begin);
+	}
 };
 
 inline TimeSeriesData load_csv(const std::string& path) {

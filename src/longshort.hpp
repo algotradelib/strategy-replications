@@ -17,11 +17,14 @@ enum class LongshortFrequency {
 template <LongshortFrequency Freq = LongshortFrequency::DAILY>
 int longshort(const std::string& directory) {
 	auto close = load_ohlc(directory, "cl");
+	close.slice_dates(20070103, 20111230);
 	int num_row = close.dates_.size();
 	int num_col = close.names_.size();
+	TimeSeriesData open;
 	Eigen::ArrayXXd curr;
 	if constexpr (Freq == LongshortFrequency::INTRADAY) {
-		auto open = load_ohlc(directory, "op");
+		open = load_ohlc(directory, "op");
+		open.slice_dates(20070103, 20111230);
 		curr = open.values_.bottomRows(num_row - 1).array();
 	} else {
 		curr = close.values_.bottomRows(num_row - 1).array();
@@ -31,7 +34,14 @@ int longshort(const std::string& directory) {
 	Eigen::ArrayXd cl_ret_mean = pct_change.rowwise().mean();
 	Eigen::ArrayXXd weights = -(pct_change.colwise() - cl_ret_mean);
 	weights.colwise() /= weights.abs().rowwise().sum();
-	Eigen::ArrayXd ret = (weights * pct_change).rowwise().sum();
+	// Eigen::ArrayXd ret = (weights * pct_change).rowwise().sum();
+	Eigen::ArrayXd ret;
+	if constexpr (Freq == LongshortFrequency::INTRADAY) {
+		Eigen::ArrayXXd ret_oc = ((close.values_.array() - open.values_.array()) / open.values_.array()).bottomRows(num_row - 1);
+		ret = (weights * ret_oc).rowwise().sum();
+	} else {
+		ret = (weights.topRows(num_row - 2) * pct_change.bottomRows(num_row - 2)).rowwise().sum();
+	}
 	ret = ret.isNaN().select(0.0, ret);
 	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();
