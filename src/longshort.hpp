@@ -31,17 +31,18 @@ int longshort(const std::string& directory) {
 	}
 	const auto& prev = close.values_.topRows(num_row - 1).array();
 	Eigen::ArrayXXd pct_change = (curr - prev) / prev;
-	Eigen::ArrayXd cl_ret_mean = pct_change.rowwise().mean();
+	// pct_change includes nan
+	Eigen::ArrayXd n_valid_row = pct_change.isFinite().cast<double>().rowwise().sum();
+	Eigen::ArrayXd cl_ret_mean = pct_change.isFinite().select(pct_change, 0.0).rowwise().sum() / n_valid_row;
 	Eigen::ArrayXXd weights = -(pct_change.colwise() - cl_ret_mean);
-	weights.colwise() /= weights.abs().rowwise().sum();
-	// Eigen::ArrayXd ret = (weights * pct_change).rowwise().sum();
-	Eigen::ArrayXd ret;
+	weights.colwise() /= weights.isFinite().select(weights, 0.0).abs().rowwise().sum();
+	Eigen::ArrayXXd pnl;
 	if constexpr (Freq == LongshortFrequency::INTRADAY) {
-		Eigen::ArrayXXd ret_oc = ((close.values_.array() - open.values_.array()) / open.values_.array()).bottomRows(num_row - 1);
-		ret = (weights * ret_oc).rowwise().sum();
+		pnl = weights * ((close.values_.array() - open.values_.array()) / open.values_.array()).bottomRows(num_row - 1);
 	} else {
-		ret = (weights.topRows(num_row - 2) * pct_change.bottomRows(num_row - 2)).rowwise().sum();
+		pnl = weights.topRows(num_row - 2) * pct_change.bottomRows(num_row - 2);
 	}
+	Eigen::ArrayXd ret = pnl.isFinite().select(pnl, 0.0).rowwise().sum();
 	ret = ret.isNaN().select(0.0, ret);
 	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();
