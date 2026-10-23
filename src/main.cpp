@@ -2,6 +2,7 @@
 #include "./bollinger.hpp"
 #include "./kalman.hpp"
 #include "./buy_on_gap.hpp"
+#include "./longshort.hpp"
 #include <CLI/CLI.hpp>
 #include <iostream>
 #include <map>
@@ -12,10 +13,12 @@ namespace {
 enum class Strategy : int {
 	LINEAR,
 	LINEAR_LOG,
+	LINEAR_LONGSHORT,
 	RATIO,
 	BOLLINGER,
 	KALMAN,
 	BUYONGAP,
+	LONGSHORT,
 };
 
 } // namespace
@@ -26,10 +29,12 @@ int main(int argc, char** argv) {
 	std::map<std::string, Strategy> strategy_map{
 		{"linear", Strategy::LINEAR},
 		{"linear-log", Strategy::LINEAR_LOG},
+		{"linear-longshort", Strategy::LINEAR_LONGSHORT},
 		{"ratio", Strategy::RATIO},
 		{"bollinger", Strategy::BOLLINGER},
 		{"kalman", Strategy::KALMAN},
-		{"bog", Strategy::BUYONGAP}
+		{"bog", Strategy::BUYONGAP},
+		{"longshort", Strategy::LONGSHORT}
 	};
 	std::string path;
 	// std::string y_name, x_name;
@@ -51,6 +56,8 @@ int main(int argc, char** argv) {
 			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::PRICE>(path, variables, shorts);
 		case Strategy::LINEAR_LOG:
 			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::LOG>(path, variables, shorts);
+		case Strategy::LINEAR_LONGSHORT:
+			return strategy_replications::longshort<strategy_replications::LongshortFrequency::DAILY>(path);
 		case Strategy::RATIO:
 			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::RATIO>(path, variables, shorts);
 		case Strategy::BOLLINGER:
@@ -59,6 +66,8 @@ int main(int argc, char** argv) {
 			return strategy_replications::kalman(path, variables, shorts);
 		case Strategy::BUYONGAP:
 			return strategy_replications::buy_on_gap(path);
+		case Strategy::LONGSHORT:
+			return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
 	}
   return 0;
 }
