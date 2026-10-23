@@ -13,7 +13,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [x] Kalman Filter (`kalman`)
 - Mean Reversion of Stocks and ETFs (chapter 4)
   - [x] Buy-on-Gap Model (`bog` - vectorized without using `algotradelib`)
-  - [ ] Cross-Sectional Linear Long-Short
+  - [x] Cross-Sectional Linear Long-Short (`linear-longshort`, `longshort` - both vectorized)
   - [ ] Arbitrage between an ETF and Component Stocks
 - Interday Momentum Strategies (chapter 6)
   - [ ] Time series momentum
