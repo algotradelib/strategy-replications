@@ -3,6 +3,7 @@
 #include "./kalman.hpp"
 #include "./buy_on_gap.hpp"
 #include "./longshort.hpp"
+#include "./ts_mom.hpp"
 #include <CLI/CLI.hpp>
 #include <iostream>
 #include <map>
@@ -19,6 +20,7 @@ enum class Strategy : int {
 	KALMAN,
 	BUYONGAP,
 	LONGSHORT,
+	TSMOM,
 };
 
 } // namespace
@@ -34,7 +36,8 @@ int main(int argc, char** argv) {
 		{"bollinger", Strategy::BOLLINGER},
 		{"kalman", Strategy::KALMAN},
 		{"bog", Strategy::BUYONGAP},
-		{"longshort", Strategy::LONGSHORT}
+		{"longshort", Strategy::LONGSHORT},
+		{"tsmom", Strategy::TSMOM}
 	};
 	std::string path;
 	// std::string y_name, x_name;
@@ -68,6 +71,8 @@ int main(int argc, char** argv) {
 			return strategy_replications::buy_on_gap(path);
 		case Strategy::LONGSHORT:
 			return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
+		case Strategy::TSMOM:
+			return strategy_replications::ts_mom(path, variables);
 	}
   return 0;
 }
