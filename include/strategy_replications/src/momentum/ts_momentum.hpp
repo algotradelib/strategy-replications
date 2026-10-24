@@ -12,7 +12,7 @@ namespace analytics = algotradelib::analytics;
 
 using algotradelib::Decimal64;
 using algotradelib::InstrumentId;
-using algotradelib::strategy::BarSlice;
+using algotradelib::strategy::BarEvent;
 using algotradelib::strategy::TargetPosition;
 
 namespace momentum {
@@ -35,11 +35,11 @@ struct TsMomentum {
 	Params params_;
 
 	template <class Ctx>
-	void on_bars(Ctx& ctx, const BarSlice& slice) {
-		if (slice.find(params_.instrument_) == nullptr) {
-			return;
-		}
-		const auto* series = ctx.bars(params_.instrument_, slice.interval_);
+	void on_bar(Ctx& ctx, const BarEvent& bar) {
+		if (!(bar.instrument_ == params_.instrument_)) {
+      return;
+    }
+		const auto* series = ctx.bars(bar.instrument_, bar.interval_);
 		if (series == nullptr) {
 			return;
 		}
