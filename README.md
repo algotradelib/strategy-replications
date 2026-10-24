@@ -16,7 +16,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [x] Cross-Sectional Linear Long-Short (`linear-longshort`, `longshort` - both vectorized)
   - [ ] Arbitrage between an ETF and Component Stocks
 - Interday Momentum Strategies (chapter 6)
-  - [ ] Time series momentum
+  - [x] Time series momentum (`tsmom`)
   - [ ] Cross-sectional momentum
 - Mean Reversion of Currencies and Futures (chapter 5)
   - [ ] Trading Currency Cross-Rates
