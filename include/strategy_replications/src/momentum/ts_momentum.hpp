@@ -43,16 +43,16 @@ struct TsMomentum {
 		if (series == nullptr) {
 			return;
 		}
-		const Eigen::VectorXd close = series->column(algotradelib::analytics::BarField::CLOSE);
+		const Eigen::VectorXd close = series->column(analytics::BarField::CLOSE);
 		const auto num = static_cast<int>(close.size());
 		double units = 0;
-		for (int h = 0; h + 1 < params_.holddays_; ++h) {
+		for (int h = 0; h < params_.holddays_ - 1; ++h) {
 			if (num < h + 1 + params_.lookback_) {
 				break;
 			}
 			const double now = close[static_cast<Eigen::Index>(num - 1 - h)];
 			const double then = close[static_cast<Eigen::Index>(num - 1 - h - params_.lookback_)];
-			units += now > then ? 1 : now < then ? -1 : 0;
+			units += (now > then) - (now < then);
 		}
 		TargetPosition target;
 		target.instrument_ = params_.instrument_;
