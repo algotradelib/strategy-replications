@@ -1,6 +1,4 @@
-#include "./linear.hpp"
-#include "./bollinger.hpp"
-#include "./kalman.hpp"
+#include "./reversion.hpp"
 #include "./buy_on_gap.hpp"
 #include "./longshort.hpp"
 #include "./ts_mom.hpp"
