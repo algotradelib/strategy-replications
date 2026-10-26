@@ -62,20 +62,20 @@ struct BuyOnGap {
 	void init() {
 		num_asset_ = params_.universe_.size();
 		buffer_size_ = std::max(params_.window_ + 2, params_.lookback_ + 1);
-		close_buffer_ = Eigen::ArrayXXd::Zero(buffer_size_, num_asset_);
-		pct_change_ = Eigen::ArrayXd::Zero(num_asset_);
-		pct_change_remove_ = Eigen::ArrayXd::Zero(num_asset_);
-		ret_sum_ = Eigen::ArrayXd::Zero(num_asset_);
-		ret_ss_ = Eigen::ArrayXd::Zero(num_asset_);
-		ret_sd_ = Eigen::ArrayXd::Zero(num_asset_);
-		close_sum_ = Eigen::ArrayXd::Zero(num_asset_);
-		prev_close_ = Eigen::ArrayXd::Zero(num_asset_);
-		curr_close_ = Eigen::ArrayXd::Zero(num_asset_);
-		curr_open_ = Eigen::ArrayXd::Zero(num_asset_);
-		prev_low_ = Eigen::ArrayXd::Zero(num_asset_);
-		gap_ = Eigen::ArrayXd::Zero(num_asset_);
-		gapped_ = Eigen::Array<bool, Eigen::Dynamic, 1>::Constant(num_asset_, false);
-		ret_id_ = Eigen::VectorXi::Zero(num_asset_);
+		close_buffer_.setZero(buffer_size_, num_asset_);
+		pct_change_.setZero(num_asset_);
+		pct_change_remove_.setZero(num_asset_);
+		ret_sum_.setZero(num_asset_);
+		ret_ss_.setZero(num_asset_);
+		ret_sd_.setZero(num_asset_);
+		close_sum_.setZero(num_asset_);
+		prev_close_.setZero(num_asset_);
+		curr_close_.setZero(num_asset_);
+		curr_open_.setZero(num_asset_);
+		prev_low_.setZero(num_asset_);
+		gap_.setZero(num_asset_);
+		gapped_.setConstant(num_asset_, false);
+		ret_id_.setZero(num_asset_);
 		held_.assign(num_asset_, false);
 	}
 
