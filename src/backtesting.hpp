@@ -42,16 +42,16 @@ inline backtest::ReplayConfig config_for(const std::vector<std::string>& names, 
   return replay;
 }
 
-backtest::NextBarFillModel costs() {
+backtest::NextBarFillModel costs_none() {
   return backtest::NextBarFillModel(
-    backtest::CommissionModel::of(Decimal64::parse("0.00015"), Decimal64::parse("100")),
-    backtest::SlippageModel::of_ticks(0)
+    backtest::CommissionModel::none(),
+    backtest::SlippageModel::none()
   );
 }
 
 template <typename Strategy>
 inline backtest::Backtester<Strategy> replay(Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs) {
-  backtest::Backtester<Strategy> engine(std::move(strategy), config_for(names, configs), costs());
+  backtest::Backtester<Strategy> engine(std::move(strategy), config_for(names, configs), costs_none());
   std::vector<std::size_t> columns;
   for (const auto& name : names) {
 		columns.push_back(data.col(name));

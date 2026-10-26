@@ -25,7 +25,7 @@ int buy_on_gap(const std::string& directory) {
 	const auto engine = backtesting::replay_intraday(std::move(bog_model), open, high, low, close, configs);
 	const auto& result = engine.result();
 	backtesting::replay_log(bog_model.params_.tag_, result);
-	backtesting::summarize_intraday(close, result, std::stod(configs.cash_), capital, bog_model.params_.window_ + 1);
+	backtesting::summarize_intraday(close, result, capital, bog_model.params_.window_ + 1);
   return 0;
 }
 

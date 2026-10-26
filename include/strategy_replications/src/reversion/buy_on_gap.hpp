@@ -47,7 +47,7 @@ struct BuyOnGap {
 	Eigen::ArrayXXd close_buffer_;
 	Eigen::ArrayXd pct_change_, pct_change_remove_;
 	Eigen::ArrayXd ret_sum_, ret_ss_, ret_sd_, close_sum_;
-	Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_, positions_;
+	Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_;
 	Eigen::Array<bool, Eigen::Dynamic, 1> gapped_;
 	Eigen::VectorXi ret_id_;
 	bool initialized_{false};
@@ -63,24 +63,17 @@ struct BuyOnGap {
 		num_asset_ = params_.universe_.size();
 		buffer_size_ = std::max(params_.window_ + 2, params_.lookback_ + 1);
 		close_buffer_ = Eigen::ArrayXXd::Zero(buffer_size_, num_asset_);
-		// ret_buffer_ = Eigen::ArrayXXd::Zero(params_.window_, num_asset_);
-		// close_buffer_ = Eigen::ArrayXXd::Zero(params_.lookback_, num_asset_);
-		// ret_buffer_ = Eigen::ArrayXXd::Zero(params_.window_, num_asset_);
-		// close_lookback_ = Eigen::ArrayXXd::Zero(params_.lookback_, num_asset_);
 		pct_change_ = Eigen::ArrayXd::Zero(num_asset_);
 		pct_change_remove_ = Eigen::ArrayXd::Zero(num_asset_);
 		ret_sum_ = Eigen::ArrayXd::Zero(num_asset_);
 		ret_ss_ = Eigen::ArrayXd::Zero(num_asset_);
 		ret_sd_ = Eigen::ArrayXd::Zero(num_asset_);
 		close_sum_ = Eigen::ArrayXd::Zero(num_asset_);
-		// back_close_ = Eigen::ArrayXd::Zero(num_asset_);
 		prev_close_ = Eigen::ArrayXd::Zero(num_asset_);
 		curr_close_ = Eigen::ArrayXd::Zero(num_asset_);
 		curr_open_ = Eigen::ArrayXd::Zero(num_asset_);
 		prev_low_ = Eigen::ArrayXd::Zero(num_asset_);
-		// curr_low_ = Eigen::ArrayXd::Zero(num_asset_);
 		gap_ = Eigen::ArrayXd::Zero(num_asset_);
-		positions_ = Eigen::ArrayXd::Zero(num_asset_);
 		gapped_ = Eigen::Array<bool, Eigen::Dynamic, 1>::Constant(num_asset_, false);
 		ret_id_ = Eigen::VectorXi::Zero(num_asset_);
 		held_.assign(num_asset_, false);
@@ -101,7 +94,6 @@ struct BuyOnGap {
     gap_ = curr_open_ / prev_low_ - 1;
     gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / params_.lookback_);
     const int num_gapped = gapped_.count();
-		positions_.setZero();
 		if (num_gapped > params_.top_) {
 			std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
 			std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
@@ -114,12 +106,11 @@ struct BuyOnGap {
 					return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
 				}
 			);
-			positions_(ret_id_(Eigen::seqN(0, params_.top_))) = 1.0;
-		} else if (num_gapped > 0) {
-			positions_ += gapped_.cast<double>();
+			gapped_.setConstant(false);
+			gapped_(ret_id_(Eigen::seqN(0, params_.top_))) = true;
 		}
     for (int i = 0; i < num_asset_; ++i) {
-      if (positions_[i] <= 0) {
+			if (!gapped_[i]) {
         continue;
       }
       TargetPosition target;
