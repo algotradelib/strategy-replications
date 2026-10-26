@@ -14,12 +14,14 @@ enum class Strategy : int {
 	LINEAR,
 	LINEAR_LOG,
 	LINEAR_LONGSHORT,
+	LINEAR_LONGSHORT_VEC,
 	RATIO,
 	BOLLINGER,
 	KALMAN,
 	BUYONGAP,
 	BUYONGAP_VEC,
 	LONGSHORT,
+	LONGSHORT_VEC,
 	TSMOM,
 };
 
@@ -32,12 +34,14 @@ int main(int argc, char** argv) {
 		{"linear", Strategy::LINEAR},
 		{"linear-log", Strategy::LINEAR_LOG},
 		{"linear-longshort", Strategy::LINEAR_LONGSHORT},
+		{"linear-longshort-vec", Strategy::LINEAR_LONGSHORT_VEC},
 		{"ratio", Strategy::RATIO},
 		{"bollinger", Strategy::BOLLINGER},
 		{"kalman", Strategy::KALMAN},
 		{"bog", Strategy::BUYONGAP},
 		{"bog-vec", Strategy::BUYONGAP_VEC},
 		{"longshort", Strategy::LONGSHORT},
+		{"longshort-vec", Strategy::LONGSHORT_VEC},
 		{"tsmom", Strategy::TSMOM}
 	};
 	std::string path;
@@ -61,6 +65,8 @@ int main(int argc, char** argv) {
 		case Strategy::LINEAR_LOG:
 			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::LOG>(path, variables, shorts);
 		case Strategy::LINEAR_LONGSHORT:
+			return strategy_replications::longshort_daily(path);
+		case Strategy::LINEAR_LONGSHORT_VEC:
 			return strategy_replications::longshort<strategy_replications::LongshortFrequency::DAILY>(path);
 		case Strategy::RATIO:
 			return strategy_replications::linear<strategy_replications::reversion::LinearSpread::RATIO>(path, variables, shorts);
@@ -73,6 +79,8 @@ int main(int argc, char** argv) {
 		case Strategy::BUYONGAP_VEC:
 			return strategy_replications::bog_vectorized(path);
 		case Strategy::LONGSHORT:
+			return 1;
+		case Strategy::LONGSHORT_VEC:
 			return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
 		case Strategy::TSMOM:
 			return strategy_replications::ts_mom(path, variables);

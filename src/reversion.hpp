@@ -57,4 +57,22 @@ int kalman(const std::string& path, const std::vector<std::string>& names, bool 
   return 0;
 }
 
+// Example 4.3 Linear Long-Short Model
+int longshort_daily(const std::string& directory) {
+	auto df = load_ohlc(directory, "cl");
+	df.slice_dates(20070103, 20111230);
+  reversion::LinearLongShort linear_longshort;
+	linear_longshort.params_.scale_ = 100000;
+	linear_longshort.params_.universe_ = {};
+	for (const auto& name : df.names_) {
+		linear_longshort.params_.universe_.push_back(utils::id_of(name));
+	}
+	backtesting::Config configs;
+	const auto engine = backtesting::replay(std::move(linear_longshort), df, df.names_, configs);
+	const auto& result = engine.result();
+	backtesting::replay_log(linear_longshort.params_.tag_, result);
+	backtesting::summarize(df, df.names_, result, 1);
+  return 0;
+}
+
 } // namespace strategy_replications

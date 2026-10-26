@@ -128,7 +128,7 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 	// Eigen::MatrixXd pnl = prev * pct_change.array();
 	// Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
 	Eigen::ArrayXd pnl = (position_prev * pct_change.array()).rowwise().sum();
-	Eigen::ArrayXd ret = pnl / position_prev.cwiseAbs().rowwise().sum();
+	Eigen::ArrayXd ret = pnl.isFinite().select(pnl, 0.0) / position_prev.cwiseAbs().rowwise().sum();
 	ret = ret.isNaN().select(0.0, ret);
 	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();
