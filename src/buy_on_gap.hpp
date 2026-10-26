@@ -8,7 +8,8 @@
 
 namespace strategy_replications {
 
-int buy_on_gap(const std::string& directory) {
+// Example 4.1
+int bog_vectorized(const std::string& directory) {
 	int top_ = 10;
 	int lookback_ = 20;
 	int window_ = 90;

@@ -1,4 +1,5 @@
 #include "./reversion.hpp"
+#include "./reversion_intraday.hpp"
 #include "./buy_on_gap.hpp"
 #include "./longshort.hpp"
 #include "./ts_mom.hpp"
@@ -17,6 +18,7 @@ enum class Strategy : int {
 	BOLLINGER,
 	KALMAN,
 	BUYONGAP,
+	BUYONGAP_VEC,
 	LONGSHORT,
 	TSMOM,
 };
@@ -34,6 +36,7 @@ int main(int argc, char** argv) {
 		{"bollinger", Strategy::BOLLINGER},
 		{"kalman", Strategy::KALMAN},
 		{"bog", Strategy::BUYONGAP},
+		{"bog-vec", Strategy::BUYONGAP_VEC},
 		{"longshort", Strategy::LONGSHORT},
 		{"tsmom", Strategy::TSMOM}
 	};
@@ -67,6 +70,8 @@ int main(int argc, char** argv) {
 			return strategy_replications::kalman(path, variables, shorts);
 		case Strategy::BUYONGAP:
 			return strategy_replications::buy_on_gap(path);
+		case Strategy::BUYONGAP_VEC:
+			return strategy_replications::bog_vectorized(path);
 		case Strategy::LONGSHORT:
 			return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
 		case Strategy::TSMOM:

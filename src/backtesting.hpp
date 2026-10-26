@@ -30,6 +30,7 @@ struct Config {
 inline backtest::ReplayConfig config_for(const std::vector<std::string>& names, const Config& configs) {
 	backtest::ReplayConfig replay;
 	replay.cash_ = Decimal64::parse(configs.cash_);
+	replay.currency_ = Currency{"USD"};
 	for (const auto& name : names) {
 		replay.instruments_.push_back(utils::reference(name));
 	}
@@ -49,7 +50,7 @@ backtest::NextBarFillModel costs() {
 }
 
 template <typename Strategy>
-backtest::Backtester<Strategy> replay(Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs) {
+inline backtest::Backtester<Strategy> replay(Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs) {
   backtest::Backtester<Strategy> engine(std::move(strategy), config_for(names, configs), costs());
   std::vector<std::size_t> columns;
   for (const auto& name : names) {
