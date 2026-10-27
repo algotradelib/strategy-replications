@@ -53,7 +53,7 @@ struct BuyOnGap {
 	bool initialized_{false};
 	std::vector<bool> held_;
 
-	// 0: (o, o, o, o), 1: (o, h, l, c), 2: b3 (c, c, c, c)
+	// 0: (o, o, o, o), 1: (o, h, l, c), 2: (c, c, c, c)
 	static int part_of(std::chrono::system_clock::time_point end) {
 		const auto midnight = std::chrono::floor<std::chrono::hours>(end);
 		return static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(end - midnight).count()) - 1;

@@ -1,3 +1,4 @@
 #pragma once
 
 #include "./src/reversion/buy_on_gap.hpp"
+#include "./src/reversion/intraday_longshort.hpp"

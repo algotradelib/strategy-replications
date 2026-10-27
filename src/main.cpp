@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 		case Strategy::BUYONGAP_VEC:
 			return strategy_replications::bog_vectorized(path);
 		case Strategy::LONGSHORT:
-			return 1;
+			return strategy_replications::longshort_intraday(path);
 		case Strategy::LONGSHORT_VEC:
 			return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
 		case Strategy::TSMOM:

@@ -42,6 +42,7 @@ struct LinearLongShort {
 		curr_.setZero(num_asset_);
 		prev_.setZero(num_asset_);
 		pct_change_.setZero(num_asset_);
+		weights_.setZero(num_asset_);
 		held_.setZero(num_asset_);
 	}
 
