@@ -120,15 +120,16 @@ inline void summarize(const TimeSeriesData& data, const std::vector<std::string>
 		}
 	}
 	positions *= data.values_.array();
-	Eigen::MatrixXd pct_change = math::unobserved(num_row - 1, num_col);
+	positions = positions.isNaN().select(0.0, positions);
 	const auto& curr = data.values_.bottomRows(num_row - 1).array();
 	const auto& prev = data.values_.topRows(num_row - 1).array();
 	const auto& position_prev = positions.topRows(num_row - 1);
-	pct_change = (curr - prev) / prev; // (num_row - 1) x num_col
+	Eigen::ArrayXXd pct_change = (curr - prev) / prev; // (num_row - 1) x num_col
+	pct_change = pct_change.isNaN().select(0.0, pct_change);
 	// Eigen::MatrixXd pnl = prev * pct_change.array();
 	// Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
-	Eigen::ArrayXd pnl = (position_prev * pct_change.array()).rowwise().sum();
-	Eigen::ArrayXd ret = pnl.isFinite().select(pnl, 0.0) / position_prev.cwiseAbs().rowwise().sum();
+	Eigen::ArrayXd pnl = (position_prev * pct_change).rowwise().sum();
+	Eigen::ArrayXd ret = pnl / position_prev.cwiseAbs().rowwise().sum();
 	ret = ret.isNaN().select(0.0, ret);
 	double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
 	double ret_mean = ret.mean();

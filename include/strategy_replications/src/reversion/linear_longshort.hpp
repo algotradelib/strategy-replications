@@ -72,18 +72,22 @@ struct LinearLongShort {
 		Eigen::Array<std::int64_t, Eigen::Dynamic, 1> target = (curr_.isFinite() && curr_ > 0).select(weights_ / curr_, 0.0).unaryExpr([this](double x) {
 			return static_cast<std::int64_t>(std::llround(x * params_.scale_));
 		});
-		const auto& submitted = target == held_;
+		// const auto& submitted = target == held_;
 		for (int i = 0; i < num_asset_; ++i) {
-			if (submitted[i]) {
+			// if (submitted[i]) {
+			// 	continue;
+			// }
+			if (target[i] == held_[i]) {
 				continue;
 			}
+			held_[i] = target[i];
 			TargetPosition position;
 			position.instrument_ = params_.universe_[i];
 			position.tag_ = params_.tag_;
 			position.target_quantity_ = Decimal64(target[i], 0);
 			ctx.submit(position);
 		}
-		held_ = target;
+		// held_ = submitted.select(target, held_);
 	}
 };
 
