@@ -26,14 +26,20 @@ int bog_vectorized(const std::string& directory) {
 	// Eigen::ArrayXXd pct_change = (curr - prev) / prev;
 	Eigen::ArrayXXd pct_change = Eigen::ArrayXXd::Zero(num_row, num_col);
 	pct_change.bottomRows(num_row - 1) = (curr - prev) / prev;
+	const Eigen::ArrayXXd pct_count = pct_change.isFinite().cast<double>();
+	pct_change = pct_change.isFinite().select(pct_change, 0.0);
+	const Eigen::ArrayXXd cl_count_all = close.values_.array().isFinite().cast<double>();
+	const Eigen::ArrayXXd cl_values = close.values_.array().isFinite().select(close.values_.array(), 0.0);
 	Eigen::ArrayXd cl_ret_sum = pct_change.topRows(window_).colwise().sum();
 	Eigen::ArrayXd cl_ret_ss = pct_change.topRows(window_).colwise().squaredNorm();
+	Eigen::ArrayXd cl_ret_count = pct_count.topRows(window_).colwise().sum();
 	Eigen::ArrayXd cl_ret_sd(num_col);
 	Eigen::ArrayXd ret_gap(num_col);
 	Eigen::VectorXi ret_id(num_col);
 	Eigen::ArrayXd curr_open(num_col);
 	Eigen::ArrayXd prev_low(num_col);
-	Eigen::ArrayXd cl_sum = close.values_.middleRows(t_start - lookback_ - 1, lookback_).colwise().sum();
+	Eigen::ArrayXd cl_sum = cl_values.middleRows(t_start - lookback_ - 1, lookback_).colwise().sum();
+	Eigen::ArrayXd cl_count = cl_count_all.middleRows(t_start - lookback_ - 1, lookback_).colwise().sum();
 	Eigen::Array<bool, Eigen::Dynamic, 1> gapped(num_col);
 	// Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic> positions = Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic>::Constant(num_row, num_col, false);
 	Eigen::ArrayXXd positions = Eigen::ArrayXXd::Zero(num_row - t_start, num_col);
@@ -41,12 +47,14 @@ int bog_vectorized(const std::string& directory) {
 	for (int i = t_start; i < num_row; ++i) {
 		cl_ret_sum += pct_change.row(i - 1).array() - pct_change.row(i - 1 - window_).array();
 		cl_ret_ss += pct_change.row(i - 1).array().square() - pct_change.row(i - 1 - window_).array().square();
-		cl_ret_sd = ((cl_ret_ss - cl_ret_sum.square() / window_) / (window_ - 1)).sqrt();
-		cl_sum += close.values_.row(i - 1).array() - close.values_.row(i - 1 - lookback_).array();
+		cl_ret_count += pct_count.row(i - 1) - pct_count.row(i - 1 - window_);
+		cl_ret_sd = ((cl_ret_ss - cl_ret_sum.square() / cl_ret_count) / (cl_ret_count - 1)).sqrt();
+		cl_sum += cl_values.row(i - 1) - cl_values.row(i - 1 - lookback_);
+		cl_count += cl_count_all.row(i - 1) - cl_count_all.row(i - 1 - lookback_);
 		curr_open = open.values_.row(i).array();
 		prev_low = low.values_.row(i - 1).array();
 		ret_gap = (curr_open - prev_low) / prev_low;
-		gapped = ret_gap.isFinite() * (curr_open < prev_low * (1 - entry_ * cl_ret_sd)) * (curr_open > cl_sum / lookback_);
+		gapped = ret_gap.isFinite() * (curr_open < prev_low * (1 - entry_ * cl_ret_sd)) * (curr_open > cl_sum / cl_count);
 		num_gapped = gapped.count();
 		if (num_gapped > top_) {
 			std::iota(std::begin(ret_id), std::begin(ret_id) + ret_id.size(), 0);

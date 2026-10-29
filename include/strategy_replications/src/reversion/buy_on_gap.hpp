@@ -46,7 +46,7 @@ struct BuyOnGap {
 	int num_asset_, buffer_size_, bar_count_{0};
 	Eigen::ArrayXXd close_buffer_;
 	Eigen::ArrayXd pct_change_, pct_change_remove_;
-	Eigen::ArrayXd ret_sum_, ret_ss_, ret_sd_, close_sum_;
+	Eigen::ArrayXd ret_sum_, ret_ss_, ret_count_, ret_sd_, close_sum_, close_count_;
 	Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_;
 	Eigen::Array<bool, Eigen::Dynamic, 1> gapped_;
 	Eigen::VectorXi ret_id_;
@@ -67,8 +67,10 @@ struct BuyOnGap {
 		pct_change_remove_.setZero(num_asset_);
 		ret_sum_.setZero(num_asset_);
 		ret_ss_.setZero(num_asset_);
+		ret_count_.setZero(num_asset_);
 		ret_sd_.setZero(num_asset_);
 		close_sum_.setZero(num_asset_);
+		close_count_.setZero(num_asset_);
 		prev_close_.setZero(num_asset_);
 		curr_close_.setZero(num_asset_);
 		curr_open_.setZero(num_asset_);
@@ -90,9 +92,9 @@ struct BuyOnGap {
 		if (bar_count_ < params_.window_ + 1 || bar_count_ < params_.lookback_) {
       return;
     }
-    ret_sd_ = ((ret_ss_ - ret_sum_.square() / params_.window_) / (params_.window_ - 1)).sqrt();
+    ret_sd_ = ((ret_ss_ - ret_sum_.square() / ret_count_) / (ret_count_ - 1)).sqrt();
     gap_ = curr_open_ / prev_low_ - 1;
-    gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / params_.lookback_);
+    gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / close_count_);
     const int num_gapped = gapped_.count();
 		if (num_gapped > params_.top_) {
 			std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
@@ -155,18 +157,25 @@ struct BuyOnGap {
     }
 		close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
     ++bar_count_;
-    close_sum_ += curr_close_;
+    close_sum_ += curr_close_.isFinite().select(curr_close_, 0.0);
+    close_count_ += curr_close_.isFinite().cast<double>();
 		if (bar_count_ > params_.lookback_) {
-			close_sum_ -= close_buffer_.row((bar_count_ - 1 - params_.lookback_) % buffer_size_);
+			const Eigen::ArrayXd removed = close_buffer_.row((bar_count_ - 1 - params_.lookback_) % buffer_size_).transpose();
+			close_sum_ -= removed.isFinite().select(removed, 0.0);
+			close_count_ -= removed.isFinite().cast<double>();
 		}
     if (bar_count_ >= 2) {
       pct_change_ = curr_close_ / prev_close_ - 1;
+      ret_count_ += pct_change_.isFinite().cast<double>();
+      pct_change_ = pct_change_.isFinite().select(pct_change_, 0.0);
       ret_sum_ += pct_change_;
       ret_ss_ += pct_change_.square();
     }
     if (bar_count_ >= params_.window_ + 2) {
 			pct_change_remove_ = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_) /
 				close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
+      ret_count_ -= pct_change_remove_.isFinite().cast<double>();
+      pct_change_remove_ = pct_change_remove_.isFinite().select(pct_change_remove_, 0.0);
       ret_sum_ -= pct_change_remove_;
       ret_ss_  -= pct_change_remove_.square();
     }
