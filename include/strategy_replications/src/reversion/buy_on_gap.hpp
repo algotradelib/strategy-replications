@@ -3,12 +3,12 @@
 #include <algotradelib/analytics>
 #include <algotradelib/strategy>
 
-#include <string>
-#include <cmath>
-#include <vector>
-#include <chrono>
-#include <numeric>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <numeric>
+#include <string>
+#include <vector>
 
 namespace strategy_replications {
 
@@ -28,108 +28,107 @@ namespace reversion {
  * 
  */
 struct BuyOnGap {
-	// Keeps its own windows and never calls ctx.bars(), so its runner keeps no bar history.
-	static constexpr bool reads_bar_history = false;
+  // Keeps its own windows and never calls ctx.bars(), so its runner keeps no bar history.
+  static constexpr bool reads_bar_history = false;
 
-	struct Params {
-		std::vector<InstrumentId> universe_;
-		int top_{10};
-		int lookback_{20};
-		int window_{90};
-		double entry_{1.0};
-		double capital_{1000000000};
-		// double scale_{1000};
-		std::string tag_{"buy-on-gap"};
-	};
+  struct Params {
+    std::vector<InstrumentId> universe_;
+    int top_{10};
+    int lookback_{20};
+    int window_{90};
+    double entry_{1.0};
+    double capital_{1000000000};
+    // double scale_{1000};
+    std::string tag_{"buy-on-gap"};
+  };
 
-	Params params_;
-	int num_asset_, buffer_size_, bar_count_{0};
-	Eigen::ArrayXXd close_buffer_;
-	Eigen::ArrayXd pct_change_, pct_change_remove_;
-	Eigen::ArrayXd ret_sum_, ret_ss_, ret_count_, ret_sd_, close_sum_, close_count_;
-	Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_;
-	Eigen::Array<bool, Eigen::Dynamic, 1> gapped_;
-	Eigen::VectorXi ret_id_;
-	bool initialized_{false};
-	std::vector<bool> held_;
+  Params params_;
+  int num_asset_, buffer_size_, bar_count_{0};
+  Eigen::ArrayXXd close_buffer_;
+  Eigen::ArrayXd pct_change_, pct_change_remove_;
+  Eigen::ArrayXd ret_sum_, ret_ss_, ret_count_, ret_sd_, close_sum_, close_count_;
+  Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_;
+  Eigen::Array<bool, Eigen::Dynamic, 1> gapped_;
+  Eigen::VectorXi ret_id_;
+  bool initialized_{false};
+  std::vector<bool> held_;
 
-	// 0: (o, o, o, o), 1: (o, h, l, c), 2: (c, c, c, c)
-	static int part_of(std::chrono::system_clock::time_point end) {
-		const auto midnight = std::chrono::floor<std::chrono::hours>(end);
-		return static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(end - midnight).count()) - 1;
-	}
+  // 0: (o, o, o, o), 1: (o, h, l, c), 2: (c, c, c, c)
+  static int part_of(std::chrono::system_clock::time_point end) {
+    const auto midnight = std::chrono::floor<std::chrono::hours>(end);
+    return static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(end - midnight).count()) - 1;
+  }
 
-	void init() {
-		num_asset_ = params_.universe_.size();
-		buffer_size_ = std::max(params_.window_ + 2, params_.lookback_ + 1);
-		close_buffer_.setZero(buffer_size_, num_asset_);
-		pct_change_.setZero(num_asset_);
-		pct_change_remove_.setZero(num_asset_);
-		ret_sum_.setZero(num_asset_);
-		ret_ss_.setZero(num_asset_);
-		ret_count_.setZero(num_asset_);
-		ret_sd_.setZero(num_asset_);
-		close_sum_.setZero(num_asset_);
-		close_count_.setZero(num_asset_);
-		prev_close_.setZero(num_asset_);
-		curr_close_.setZero(num_asset_);
-		curr_open_.setZero(num_asset_);
-		prev_low_.setZero(num_asset_);
-		gap_.setZero(num_asset_);
-		gapped_.setConstant(num_asset_, false);
-		ret_id_.setZero(num_asset_);
-		held_.assign(num_asset_, false);
-	}
+  void init() {
+    num_asset_ = params_.universe_.size();
+    buffer_size_ = std::max(params_.window_ + 2, params_.lookback_ + 1);
+    close_buffer_.setZero(buffer_size_, num_asset_);
+    pct_change_.setZero(num_asset_);
+    pct_change_remove_.setZero(num_asset_);
+    ret_sum_.setZero(num_asset_);
+    ret_ss_.setZero(num_asset_);
+    ret_count_.setZero(num_asset_);
+    ret_sd_.setZero(num_asset_);
+    close_sum_.setZero(num_asset_);
+    close_count_.setZero(num_asset_);
+    prev_close_.setZero(num_asset_);
+    curr_close_.setZero(num_asset_);
+    curr_open_.setZero(num_asset_);
+    prev_low_.setZero(num_asset_);
+    gap_.setZero(num_asset_);
+    gapped_.setConstant(num_asset_, false);
+    ret_id_.setZero(num_asset_);
+    held_.assign(num_asset_, false);
+  }
 
-	template <class Ctx>
-	void decide(Ctx& ctx, const BarSlice& slice) {
-		curr_open_.setConstant(analytics::missing());
+  template <class Ctx>
+  void decide(Ctx& ctx, const BarSlice& slice) {
+    curr_open_.setConstant(analytics::missing());
     for (int i = 0; i < num_asset_; ++i) {
       if (const auto* bar = slice.find(params_.universe_[i])) {
         curr_open_[i] = analytics::to_scalar(*bar->bar_.open_);
       }
     }
-		if (bar_count_ < params_.window_ + 1 || bar_count_ < params_.lookback_) {
+    if (bar_count_ < params_.window_ + 1 || bar_count_ < params_.lookback_) {
       return;
     }
     ret_sd_ = ((ret_ss_ - ret_sum_.square() / ret_count_) / (ret_count_ - 1)).sqrt();
     gap_ = curr_open_ / prev_low_ - 1;
-    gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / close_count_);
+    gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) *
+      (curr_open_ > close_sum_ / close_count_);
     const int num_gapped = gapped_.count();
-		if (num_gapped > params_.top_) {
-			std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
-			std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
-				[this](int i1, int i2) {
-					const bool gapped1 = gapped_(i1);
-					const bool gapped2 = gapped_(i2);
-					if (gapped1 != gapped2) {
-						return gapped1;
-					}
-					return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
-				}
-			);
-			gapped_.setConstant(false);
-			gapped_(ret_id_(Eigen::seqN(0, params_.top_))) = true;
-		}
+    if (num_gapped > params_.top_) {
+      std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
+      std::nth_element(
+        std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_), [this](int i1, int i2) {
+          const bool gapped1 = gapped_(i1);
+          const bool gapped2 = gapped_(i2);
+          if (gapped1 != gapped2) {
+            return gapped1;
+          }
+          return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
+        }
+      );
+      gapped_.setConstant(false);
+      gapped_(ret_id_(Eigen::seqN(0, params_.top_))) = true;
+    }
     for (int i = 0; i < num_asset_; ++i) {
-			if (!gapped_[i]) {
+      if (!gapped_[i]) {
         continue;
       }
       TargetPosition target;
       target.instrument_ = params_.universe_[i];
       target.tag_ = params_.tag_;
-      target.target_quantity_ = Decimal64(
-				static_cast<std::int64_t>(std::floor(params_.capital_ / params_.top_ / curr_open_[i])),
-				0
-			);
+      target.target_quantity_ =
+        Decimal64(static_cast<std::int64_t>(std::floor(params_.capital_ / params_.top_ / curr_open_[i])), 0);
       ctx.submit(target);
       held_[i] = true;
     }
-	}
+  }
 
-	template <class Ctx>
-	void exit_all(Ctx& ctx, const BarSlice& slice) {
-		for (int i = 0; i < num_asset_; ++i) {
+  template <class Ctx>
+  void exit_all(Ctx& ctx, const BarSlice& slice) {
+    for (int i = 0; i < num_asset_; ++i) {
       if (!held_[i]) {
         continue;
       }
@@ -146,24 +145,24 @@ struct BuyOnGap {
         prev_low_[i] = analytics::to_scalar(bar->bar_.low_);
       }
     }
-	}
+  }
 
-	void push_close(const BarSlice& slice) {
-		curr_close_.setConstant(analytics::missing());
+  void push_close(const BarSlice& slice) {
+    curr_close_.setConstant(analytics::missing());
     for (int i = 0; i < num_asset_; ++i) {
       if (const auto* bar = slice.find(params_.universe_[i])) {
         curr_close_[i] = analytics::to_scalar(bar->bar_.close_);
       }
     }
-		close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
+    close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
     ++bar_count_;
     close_sum_ += curr_close_.isFinite().select(curr_close_, 0.0);
     close_count_ += curr_close_.isFinite().cast<double>();
-		if (bar_count_ > params_.lookback_) {
-			const Eigen::ArrayXd removed = close_buffer_.row((bar_count_ - 1 - params_.lookback_) % buffer_size_).transpose();
-			close_sum_ -= removed.isFinite().select(removed, 0.0);
-			close_count_ -= removed.isFinite().cast<double>();
-		}
+    if (bar_count_ > params_.lookback_) {
+      const Eigen::ArrayXd removed = close_buffer_.row((bar_count_ - 1 - params_.lookback_) % buffer_size_).transpose();
+      close_sum_ -= removed.isFinite().select(removed, 0.0);
+      close_count_ -= removed.isFinite().cast<double>();
+    }
     if (bar_count_ >= 2) {
       pct_change_ = curr_close_ / prev_close_ - 1;
       ret_count_ += pct_change_.isFinite().cast<double>();
@@ -172,99 +171,99 @@ struct BuyOnGap {
       ret_ss_ += pct_change_.square();
     }
     if (bar_count_ >= params_.window_ + 2) {
-			const auto leaving = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_);
-			const auto before_leaving = close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_);
-			pct_change_remove_ = leaving / before_leaving - 1;
+      const auto leaving = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_);
+      const auto before_leaving = close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_);
+      pct_change_remove_ = leaving / before_leaving - 1;
       ret_count_ -= pct_change_remove_.isFinite().cast<double>();
       pct_change_remove_ = pct_change_remove_.isFinite().select(pct_change_remove_, 0.0);
       ret_sum_ -= pct_change_remove_;
-      ret_ss_  -= pct_change_remove_.square();
+      ret_ss_ -= pct_change_remove_.square();
     }
     prev_close_ = curr_close_;
-	}
+  }
 
-	template <class Ctx>
-	void on_bars(Ctx& ctx, const BarSlice& slice) {
-		if (!initialized_) {
-			init();
-			initialized_ = true;
-		}
-		switch (part_of(slice.period_end_)) {
-			case 0:
-				decide(ctx, slice);
-				return;
-			case 1:
-				exit_all(ctx, slice);
-				return;
-			case 2:
-				push_close(slice);
-				return;
-			default:
-				return;
-		}
-		// 
-		// prev_close_ = curr_close_;
-		// prev_low_ = curr_low_;
-		// for (int i = 0; i < num_asset_; ++i) {
-		//   if (const auto* bar = slice.find(params_.universe_[i])) {
-		//     curr_close_[i] = analytics::to_scalar(bar->bar_.close_);
-		//     curr_open_[i] = bar->bar_.open_ ? analytics::to_scalar(*bar->bar_.open_) : analytics::missing();
-		//     curr_low_[i] = analytics::to_scalar(bar->bar_.low_);
-		//   }
-		// }
-		// close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
-		// ++bar_count_;
-		// if (bar_count_ == 1) {
-		//   return;
-		// }
-		// pct_change_ = curr_close_ / prev_close_ - 1;
-		// ret_sum_ += pct_change_;
-		// ret_ss_ += pct_change_.square();
-		// close_sum_ += curr_close_;
-		// if (bar_count_ > params_.lookback_) {
-		//   close_sum_ -= close_buffer_.row((bar_count_ - params_.lookback_) % buffer_size_);
-		// }
-		// if (bar_count_ < params_.window_ + 1) {
-		//   return;
-		// }
-		// pct_change_remove_ = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_) /
-		//   close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
-		// ret_sum_ -= pct_change_remove_;
-		// ret_ss_ -= pct_change_remove_.square();
-		// ret_sd_ = ((ret_ss_ - ret_sum_.square() / params_.window_) / (params_.window_ - 1)).sqrt();
-		// gap_ = curr_open_ / prev_low_ - 1;
-		// gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / params_.lookback_);
-		// const int num_gapped = gapped_.count();
-		// positions_.setZero();
-		// if (num_gapped > params_.top_) {
-		//   std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
-		//   std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
-		//     [this](int i1, int i2) {
-		//       const bool gapped1 = gapped_(i1);
-		//       const bool gapped2 = gapped_(i2);
-		//       if (gapped1 != gapped2) {
-		//         return gapped1;
-		//       }
-		//       return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
-		//     }
-		//   );
-		//   positions_(ret_id_(Eigen::seqN(0, params_.top_))) = 1.0;
-		// } else if (num_gapped > 0) {
-		//   positions_ += gapped_.cast<double>();
-		// }
-		// for (int i = 0; i < std::min(num_gapped, params_.top_); ++i) {
-		//   if (positions_[i] > 0) {
-		//     TargetPosition target;
-		//     target.instrument_ = params_.universe_[i];
-		//     target.tag_ = params_.tag_;
-		//     target.target_quantity_ = Decimal64(
-		//       static_cast<std::int64_t>(std::floor(params_.capital_ / static_cast<double>(params_.top_) / curr_open_[i] + 0.5)),
-		//       0
-		//     );
-		//     ctx.submit(target);
-		//   }
-		// }
-	}
+  template <class Ctx>
+  void on_bars(Ctx& ctx, const BarSlice& slice) {
+    if (!initialized_) {
+      init();
+      initialized_ = true;
+    }
+    switch (part_of(slice.period_end_)) {
+      case 0:
+        decide(ctx, slice);
+        return;
+      case 1:
+        exit_all(ctx, slice);
+        return;
+      case 2:
+        push_close(slice);
+        return;
+      default:
+        return;
+    }
+    //
+    // prev_close_ = curr_close_;
+    // prev_low_ = curr_low_;
+    // for (int i = 0; i < num_asset_; ++i) {
+    //   if (const auto* bar = slice.find(params_.universe_[i])) {
+    //     curr_close_[i] = analytics::to_scalar(bar->bar_.close_);
+    //     curr_open_[i] = bar->bar_.open_ ? analytics::to_scalar(*bar->bar_.open_) : analytics::missing();
+    //     curr_low_[i] = analytics::to_scalar(bar->bar_.low_);
+    //   }
+    // }
+    // close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
+    // ++bar_count_;
+    // if (bar_count_ == 1) {
+    //   return;
+    // }
+    // pct_change_ = curr_close_ / prev_close_ - 1;
+    // ret_sum_ += pct_change_;
+    // ret_ss_ += pct_change_.square();
+    // close_sum_ += curr_close_;
+    // if (bar_count_ > params_.lookback_) {
+    //   close_sum_ -= close_buffer_.row((bar_count_ - params_.lookback_) % buffer_size_);
+    // }
+    // if (bar_count_ < params_.window_ + 1) {
+    //   return;
+    // }
+    // pct_change_remove_ = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_) /
+    //   close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
+    // ret_sum_ -= pct_change_remove_;
+    // ret_ss_ -= pct_change_remove_.square();
+    // ret_sd_ = ((ret_ss_ - ret_sum_.square() / params_.window_) / (params_.window_ - 1)).sqrt();
+    // gap_ = curr_open_ / prev_low_ - 1;
+    // gapped_ = gap_.isFinite() * (curr_open_ < prev_low_ * (1 - params_.entry_ * ret_sd_)) * (curr_open_ > close_sum_ / params_.lookback_);
+    // const int num_gapped = gapped_.count();
+    // positions_.setZero();
+    // if (num_gapped > params_.top_) {
+    //   std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
+    //   std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
+    //     [this](int i1, int i2) {
+    //       const bool gapped1 = gapped_(i1);
+    //       const bool gapped2 = gapped_(i2);
+    //       if (gapped1 != gapped2) {
+    //         return gapped1;
+    //       }
+    //       return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
+    //     }
+    //   );
+    //   positions_(ret_id_(Eigen::seqN(0, params_.top_))) = 1.0;
+    // } else if (num_gapped > 0) {
+    //   positions_ += gapped_.cast<double>();
+    // }
+    // for (int i = 0; i < std::min(num_gapped, params_.top_); ++i) {
+    //   if (positions_[i] > 0) {
+    //     TargetPosition target;
+    //     target.instrument_ = params_.universe_[i];
+    //     target.tag_ = params_.tag_;
+    //     target.target_quantity_ = Decimal64(
+    //       static_cast<std::int64_t>(std::floor(params_.capital_ / static_cast<double>(params_.top_) / curr_open_[i] + 0.5)),
+    //       0
+    //     );
+    //     ctx.submit(target);
+    //   }
+    // }
+  }
 };
 
 } // namespace reversion

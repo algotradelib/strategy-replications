@@ -1,7 +1,7 @@
 #pragma once
 
-#include "algotradelib/src/core/types.hpp"
 #include <algotradelib/core>
+#include "algotradelib/src/core/types.hpp"
 
 #include <chrono>
 #include <string>
@@ -32,30 +32,31 @@ inline std::chrono::system_clock::time_point days_from_civil(int yyyymmdd) {
   const unsigned yoe = static_cast<unsigned>(y - era * 400);
   const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
   const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-  return std::chrono::system_clock::time_point{} + std::chrono::hours(24 * (era * 146097L + static_cast<long>(doe) - 719468L));
+  return std::chrono::system_clock::time_point{} +
+    std::chrono::hours(24 * (era * 146097L + static_cast<long>(doe) - 719468L));
 }
 
 inline InstrumentId id_of(const std::string& name) {
-	return InstrumentId{atl::Country::US, atl::Venue::COMBINED, name};
+  return InstrumentId{atl::Country::US, atl::Venue::COMBINED, name};
 }
 
 inline Instrument reference(const std::string& name) {
-	Instrument instrument;
-	instrument.id_ = id_of(name);
-	instrument.name_ = name;
-	instrument.type_ = SecurityType::STOCK;
-	instrument.currency_ = Currency{"USD"};
-	instrument.lot_size_ = Decimal64::parse("1");
+  Instrument instrument;
+  instrument.id_ = id_of(name);
+  instrument.name_ = name;
+  instrument.type_ = SecurityType::STOCK;
+  instrument.currency_ = Currency{"USD"};
+  instrument.lot_size_ = Decimal64::parse("1");
   instrument.price_rule_ = PriceRule::unconstrained();
   return instrument;
 }
 
 inline Bar bar_of(int date, const std::string& close) {
-	Bar bar;
-	bar.timestamp_ = days_from_civil(date);
-	bar.open_ = bar.high_ = bar.low_ = bar.close_ = Decimal64::parse(close);
-	bar.volume_ = Decimal64::parse("100000");
-	return bar;
+  Bar bar;
+  bar.timestamp_ = days_from_civil(date);
+  bar.open_ = bar.high_ = bar.low_ = bar.close_ = Decimal64::parse(close);
+  bar.volume_ = Decimal64::parse("100000");
+  return bar;
 }
 
 } // namespace utils

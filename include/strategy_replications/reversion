@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./src/reversion/linear_reversion.hpp"
 #include "./src/reversion/bollinger_band.hpp"
 #include "./src/reversion/kalman_reversion.hpp"
 #include "./src/reversion/linear_longshort.hpp"
+#include "./src/reversion/linear_reversion.hpp"
