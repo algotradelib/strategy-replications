@@ -23,11 +23,12 @@ int buy_on_gap(const std::string& directory, bool shorts) {
   configs.cash_ = "2000000000";
   configs.shorts_ = shorts;
   const double capital = bog_model.params_.capital_; // read before the move
-  const auto tag = bog_model.params_.tag_;
+  const std::size_t t_start = bog_model.params_.window_ + 1; // read before the move
+  const auto tag = bog_model.params_.tag_; // read before the move
   const auto engine = backtesting::replay_intraday(std::move(bog_model), open, high, low, close, configs);
   const auto& result = engine.result();
   backtesting::replay_log(tag, result);
-  backtesting::summarize_intraday(close, result, capital, bog_model.params_.window_ + 1);
+  backtesting::summarize_intraday(close, result, capital, t_start);
   return 0;
 }
 
@@ -50,7 +51,7 @@ int longshort_intraday(const std::string& directory, bool shorts) {
   configs.cash_ = "2000000000";
   configs.shorts_ = shorts;
   const double capital = longshort_model.params_.capital_; // read before the move
-  const auto tag = longshort_model.params_.tag_;
+  const auto tag = longshort_model.params_.tag_; // read before the move
   const auto engine = backtesting::replay_intraday(std::move(longshort_model), open, high, low, close, configs);
   const auto& result = engine.result();
   backtesting::replay_log(tag, result);
