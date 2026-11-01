@@ -9,7 +9,7 @@
 namespace strategy_replications {
 
 // Example 4.1 Intraday Mean Reversion
-int buy_on_gap(const std::string& directory) {
+int buy_on_gap(const std::string& directory, bool shorts) {
   auto open = load_ohlc(directory, "op");
   auto high = load_ohlc(directory, "hi");
   auto low = load_ohlc(directory, "lo");
@@ -21,16 +21,18 @@ int buy_on_gap(const std::string& directory) {
   }
   backtesting::Config configs;
   configs.cash_ = "2000000000";
+  configs.shorts_ = shorts;
   const double capital = bog_model.params_.capital_; // read before the move
+  const auto tag = bog_model.params_.tag_;
   const auto engine = backtesting::replay_intraday(std::move(bog_model), open, high, low, close, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(bog_model.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize_intraday(close, result, capital, bog_model.params_.window_ + 1);
   return 0;
 }
 
 // Example 4.4
-int longshort_intraday(const std::string& directory) {
+int longshort_intraday(const std::string& directory, bool shorts) {
   auto open = load_ohlc(directory, "op");
   auto high = load_ohlc(directory, "hi");
   auto low = load_ohlc(directory, "lo");
@@ -46,10 +48,12 @@ int longshort_intraday(const std::string& directory) {
   }
   backtesting::Config configs;
   configs.cash_ = "2000000000";
-  const double capital = longshort_model.params_.capital_;
+  configs.shorts_ = shorts;
+  const double capital = longshort_model.params_.capital_; // read before the move
+  const auto tag = longshort_model.params_.tag_;
   const auto engine = backtesting::replay_intraday(std::move(longshort_model), open, high, low, close, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(longshort_model.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize_intraday(close, result, capital, 1);
   return 0;
 }

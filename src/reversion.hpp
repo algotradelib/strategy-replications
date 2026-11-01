@@ -18,9 +18,10 @@ int linear(const std::string& path, const std::vector<std::string>& names, bool 
   linear_reversion.params_.instrument_x_ = utils::id_of(names[1]);
   backtesting::Config configs;
   configs.shorts_ = shorts;
+  const auto tag = linear_reversion.params_.tag_; // read before the move
   const auto engine = backtesting::replay(std::move(linear_reversion), df, names, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(linear_reversion.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize(df, names, result, 0);
   return 0;
 }
@@ -34,9 +35,10 @@ int bollinger(const std::string& path, const std::vector<std::string>& names, bo
   bollinger_band.params_.instrument_x_ = utils::id_of(names[1]);
   backtesting::Config configs;
   configs.shorts_ = shorts;
+  const auto tag = bollinger_band.params_.tag_; // read before the move
   const auto engine = backtesting::replay(std::move(bollinger_band), df, names, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(bollinger_band.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize(df, names, result, 0);
   return 0;
 }
@@ -50,15 +52,16 @@ int kalman(const std::string& path, const std::vector<std::string>& names, bool 
   kalman_reversion.params_.instrument_x_ = utils::id_of(names[1]);
   backtesting::Config configs;
   configs.shorts_ = shorts;
+  const auto tag = kalman_reversion.params_.tag_; // read before the move
   const auto engine = backtesting::replay(std::move(kalman_reversion), df, names, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(kalman_reversion.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize(df, names, result, 0);
   return 0;
 }
 
 // Example 4.3 Linear Long-Short Model
-int longshort_daily(const std::string& directory) {
+int longshort_daily(const std::string& directory, bool shorts) {
   auto df = load_ohlc(directory, "cl");
   df.slice_dates(20070103, 20111230);
   reversion::LinearLongShort linear_longshort;
@@ -68,9 +71,11 @@ int longshort_daily(const std::string& directory) {
     linear_longshort.params_.universe_.push_back(utils::id_of(name));
   }
   backtesting::Config configs;
+  configs.shorts_ = shorts;
+  const auto tag = linear_longshort.params_.tag_; // read before the move
   const auto engine = backtesting::replay(std::move(linear_longshort), df, df.names_, configs);
   const auto& result = engine.result();
-  backtesting::replay_log(linear_longshort.params_.tag_, result);
+  backtesting::replay_log(tag, result);
   backtesting::summarize(df, df.names_, result, 1);
   return 0;
 }

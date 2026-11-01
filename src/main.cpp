@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
   app.add_option("--vars", variables, "Variables names, can specify 2 for pair trading {y, x}")
     ->delimiter(',')
     ->allow_extra_args(false);
-  app.add_flag("--no-shorts", shorts, "Do not use shorts if specified");
+  app.add_flag("!--no-shorts", shorts, "Do not use shorts if specified");
   CLI11_PARSE(app, argc, argv);
   switch (strategy_tag) {
     case Strategy::LINEAR:
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         path, variables, shorts
       );
     case Strategy::LINEAR_LONGSHORT:
-      return strategy_replications::longshort_daily(path);
+      return strategy_replications::longshort_daily(path, shorts);
     case Strategy::LINEAR_LONGSHORT_VEC:
       return strategy_replications::longshort<strategy_replications::LongshortFrequency::DAILY>(path);
     case Strategy::RATIO:
@@ -74,15 +74,15 @@ int main(int argc, char** argv) {
     case Strategy::KALMAN:
       return strategy_replications::kalman(path, variables, shorts);
     case Strategy::BUYONGAP:
-      return strategy_replications::buy_on_gap(path);
+      return strategy_replications::buy_on_gap(path, shorts);
     case Strategy::BUYONGAP_VEC:
       return strategy_replications::bog_vectorized(path);
     case Strategy::LONGSHORT:
-      return strategy_replications::longshort_intraday(path);
+      return strategy_replications::longshort_intraday(path, shorts);
     case Strategy::LONGSHORT_VEC:
       return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
     case Strategy::TSMOM:
-      return strategy_replications::ts_mom(path, variables);
+      return strategy_replications::ts_mom(path, variables, shorts);
   }
   return 0;
 }
