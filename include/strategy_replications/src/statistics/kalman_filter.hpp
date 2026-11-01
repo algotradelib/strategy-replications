@@ -2,11 +2,11 @@
 
 #include "algotradelib/src/math/scalar.hpp"
 // #if !defined(ATL_USE_EIGEN)
-// 	#define ATL_USE_EIGEN
+//   #define ATL_USE_EIGEN
 // #endif // ATL_USE_EIGEN
 
 // #if !defined(ATL_HAS_EIGEN)
-// 	#define ATL_HAS_EIGEN
+//   #define ATL_HAS_EIGEN
 // #endif // ATL_HAS_EIGEN
 
 #include <algotradelib/analytics>
@@ -31,18 +31,18 @@ public:
 	KalmanFilter() {}
 	// KalmanFilter(const math::Scalar& delta = .0001, const math::Scalar& V_e = .001)
 	// : y_hat_(0.0), Q_t_(0.0), V_e_(V_e),
-	// 	beta_(Eigen::Vector2d::Zero()), x_t_(Eigen::Vector2d::Zero()),
-	// 	R_t_(Eigen::Vector2d::Zero()),
-	// 	V_w_((delta / (1 - delta)) * Eigen::Matrix2d::Identity()) {}
+	//   beta_(Eigen::Vector2d::Zero()), x_t_(Eigen::Vector2d::Zero()),
+	//   R_t_(Eigen::Vector2d::Zero()),
+	//   V_w_((delta / (1 - delta)) * Eigen::Matrix2d::Identity()) {}
 
 	virtual ~KalmanFilter() = default;
 
 	/**
-	 * @brief Initialization
-	 * 
-	 * @param mu_0 
-	 * @param Sigma_0 
-	 */
+   * @brief Initialization
+   * 
+   * @param mu_0 
+   * @param Sigma_0 
+   */
 	void init(const math::Scalar& delta = .0001, const math::Scalar& V_e = .001) {
 		y_hat_ = 0.0;
 		Q_t_ = 0.0;
@@ -55,11 +55,11 @@ public:
 	}
 	
 	/**
-	 * @brief Kalman Filter Recursions
-	 * 
-	 * @param y Measurement
-	 * @param x Instrument
-	 */
+   * @brief Kalman Filter Recursions
+   * 
+   * @param y Measurement
+   * @param x Instrument
+   */
 	void fit(Eigen::Ref<const Eigen::VectorXd> y, Eigen::Ref<const Eigen::VectorXd> x) {
 		int sample_size = y.size();
 		for (int i = 0; i < sample_size; ++i) {
@@ -92,11 +92,11 @@ private:
 	Eigen::Matrix2d R_t_, V_w_;
 	
 	/**
-	 * @brief Prediction step
-	 * 
-	 * @param y_t Measurement at time t
-	 * @param x_t Instrument at time t
-	 */
+   * @brief Prediction step
+   * 
+   * @param y_t Measurement at time t
+   * @param x_t Instrument at time t
+   */
 	void on_predict(const math::Scalar& x_t) {
 		x_t_[0] = x_t;
 		x_t_[1] = 1.0;
@@ -106,10 +106,10 @@ private:
 	}
 
 	/**
-	 * @brief Correction step
-	 * 
-	 * @param y_t Measurement at time t
-	 */
+   * @brief Correction step
+   * 
+   * @param y_t Measurement at time t
+   */
 	void on_correct(const math::Scalar& y_t) {
 		Eigen::Vector2d K_t = R_t_ * x_t_ / Q_t_; // 3.13
 		e_t_ = y_t - y_hat_;

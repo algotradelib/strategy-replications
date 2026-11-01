@@ -51,7 +51,7 @@ struct BollingerBand {
 		// const auto* bar_y = slice.find(params_.instrument_y_);
 		// const auto* bar_x = slice.find(params_.instrument_x_);
 		// if (bar_y == nullptr || bar_x == nullptr) {
-		// 	return;
+		//   return;
 		// }
 		if (slice.find(params_.instrument_y_) == nullptr || slice.find(params_.instrument_x_) == nullptr) {
 			return;
@@ -59,7 +59,7 @@ struct BollingerBand {
 		// closes_y_.push_back(analytics::to_scalar(bar_y->bar_.close_));
 		// closes_x_.push_back(analytics::to_scalar(bar_x->bar_.close_));
 		// if (closes_y_.size() < params_.lookback_) {
-		// 	return;
+		//   return;
 		// }
 		const auto* series_y = ctx.bars(params_.instrument_y_, slice.interval_);
 		const auto* series_x = ctx.bars(params_.instrument_x_, slice.interval_);
@@ -70,7 +70,7 @@ struct BollingerBand {
 		// Eigen::VectorXd closes_x = series_x->column(analytics::BarField::CLOSE);
 		// int sample_size = closes_x.size();
 		// if (sample_size != closes_y.size() || sample_size < params_.lookback_) {
-		// 	return;
+		//   return;
 		// }
 		// Eigen::VectorXd window_y = closes_y.tail(params_.lookback_);
 		// Eigen::VectorXd window_x = closes_x.tail(params_.lookback_);

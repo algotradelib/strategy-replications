@@ -172,8 +172,9 @@ struct BuyOnGap {
       ret_ss_ += pct_change_.square();
     }
     if (bar_count_ >= params_.window_ + 2) {
-			pct_change_remove_ = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_) /
-				close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
+			const auto leaving = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_);
+			const auto before_leaving = close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_);
+			pct_change_remove_ = leaving / before_leaving - 1;
       ret_count_ -= pct_change_remove_.isFinite().cast<double>();
       pct_change_remove_ = pct_change_remove_.isFinite().select(pct_change_remove_, 0.0);
       ret_sum_ -= pct_change_remove_;
@@ -205,29 +206,29 @@ struct BuyOnGap {
 		// prev_close_ = curr_close_;
 		// prev_low_ = curr_low_;
 		// for (int i = 0; i < num_asset_; ++i) {
-		// 	if (const auto* bar = slice.find(params_.universe_[i])) {
-		// 		curr_close_[i] = analytics::to_scalar(bar->bar_.close_);
-		// 		curr_open_[i] = bar->bar_.open_ ? analytics::to_scalar(*bar->bar_.open_) : analytics::missing();
-		// 		curr_low_[i] = analytics::to_scalar(bar->bar_.low_);
-		// 	}
+		//   if (const auto* bar = slice.find(params_.universe_[i])) {
+		//     curr_close_[i] = analytics::to_scalar(bar->bar_.close_);
+		//     curr_open_[i] = bar->bar_.open_ ? analytics::to_scalar(*bar->bar_.open_) : analytics::missing();
+		//     curr_low_[i] = analytics::to_scalar(bar->bar_.low_);
+		//   }
 		// }
 		// close_buffer_.row(bar_count_ % buffer_size_) = curr_close_;
 		// ++bar_count_;
 		// if (bar_count_ == 1) {
-		// 	return;
+		//   return;
 		// }
 		// pct_change_ = curr_close_ / prev_close_ - 1;
 		// ret_sum_ += pct_change_;
 		// ret_ss_ += pct_change_.square();
 		// close_sum_ += curr_close_;
 		// if (bar_count_ > params_.lookback_) {
-		// 	close_sum_ -= close_buffer_.row((bar_count_ - params_.lookback_) % buffer_size_);
+		//   close_sum_ -= close_buffer_.row((bar_count_ - params_.lookback_) % buffer_size_);
 		// }
 		// if (bar_count_ < params_.window_ + 1) {
-		// 	return;
+		//   return;
 		// }
 		// pct_change_remove_ = close_buffer_.row((bar_count_ - 1 - params_.window_) % buffer_size_) /
-		// 	close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
+		//   close_buffer_.row((bar_count_ - 2 - params_.window_) % buffer_size_) - 1;
 		// ret_sum_ -= pct_change_remove_;
 		// ret_ss_ -= pct_change_remove_.square();
 		// ret_sd_ = ((ret_ss_ - ret_sum_.square() / params_.window_) / (params_.window_ - 1)).sqrt();
@@ -236,32 +237,32 @@ struct BuyOnGap {
 		// const int num_gapped = gapped_.count();
 		// positions_.setZero();
 		// if (num_gapped > params_.top_) {
-		// 	std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
-		// 	std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
-		// 		[this](int i1, int i2) {
-		// 			const bool gapped1 = gapped_(i1);
-		// 			const bool gapped2 = gapped_(i2);
-		// 			if (gapped1 != gapped2) {
-		// 				return gapped1;
-		// 			}
-		// 			return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
-		// 		}
-		// 	);
-		// 	positions_(ret_id_(Eigen::seqN(0, params_.top_))) = 1.0;
+		//   std::iota(std::begin(ret_id_), std::begin(ret_id_) + num_asset_, 0);
+		//   std::nth_element(std::begin(ret_id_), std::begin(ret_id_) + params_.top_, std::end(ret_id_),
+		//     [this](int i1, int i2) {
+		//       const bool gapped1 = gapped_(i1);
+		//       const bool gapped2 = gapped_(i2);
+		//       if (gapped1 != gapped2) {
+		//         return gapped1;
+		//       }
+		//       return gapped1 && gap_(i1) < gap_(i2); // ascending among gap-downed columns
+		//     }
+		//   );
+		//   positions_(ret_id_(Eigen::seqN(0, params_.top_))) = 1.0;
 		// } else if (num_gapped > 0) {
-		// 	positions_ += gapped_.cast<double>();
+		//   positions_ += gapped_.cast<double>();
 		// }
 		// for (int i = 0; i < std::min(num_gapped, params_.top_); ++i) {
-		// 	if (positions_[i] > 0) {
-		// 		TargetPosition target;
-		// 		target.instrument_ = params_.universe_[i];
-		// 		target.tag_ = params_.tag_;
-		// 		target.target_quantity_ = Decimal64(
-		// 			static_cast<std::int64_t>(std::floor(params_.capital_ / static_cast<double>(params_.top_) / curr_open_[i] + 0.5)),
-		// 			0
-		// 		);
-		// 		ctx.submit(target);
-		// 	}
+		//   if (positions_[i] > 0) {
+		//     TargetPosition target;
+		//     target.instrument_ = params_.universe_[i];
+		//     target.tag_ = params_.tag_;
+		//     target.target_quantity_ = Decimal64(
+		//       static_cast<std::int64_t>(std::floor(params_.capital_ / static_cast<double>(params_.top_) / curr_open_[i] + 0.5)),
+		//       0
+		//     );
+		//     ctx.submit(target);
+		//   }
 		// }
 	}
 };
