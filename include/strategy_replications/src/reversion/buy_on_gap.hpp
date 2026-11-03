@@ -52,11 +52,8 @@ struct BuyOnGap {
   Eigen::VectorXi ret_id_;
   std::vector<bool> held_;
 
-  // 0: (o, o, o, o), 1: (o, h, l, c), 2: (c, c, c, c)
-  static int part_of(std::chrono::system_clock::time_point end) {
-    const auto midnight = std::chrono::floor<std::chrono::hours>(end);
-    return static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(end - midnight).count()) - 1;
-  }
+  // Which slice opens its session and which closes it, by the replay's session window.
+  algotradelib::strategy::SessionEdges edges_;
 
   void init() {
     num_asset_ = params_.universe_.size();
@@ -188,18 +185,13 @@ struct BuyOnGap {
 
   template <class Ctx>
   void on_bars(Ctx& ctx, const BarSlice& slice) {
-    switch (part_of(slice.period_end_)) {
-      case 0:
-        decide(ctx, slice);
-        return;
-      case 1:
-        exit_all(ctx, slice);
-        return;
-      case 2:
-        push_close(slice);
-        return;
-      default:
-        return;
+    const auto edge = edges_.next(slice.bars_.front(), ctx.session());
+    if (edge.opens_) {
+      decide(ctx, slice);
+    }
+    if (edge.closes_) {
+      exit_all(ctx, slice);
+      push_close(slice);
     }
     //
     // prev_close_ = curr_close_;
