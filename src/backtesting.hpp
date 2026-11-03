@@ -46,16 +46,23 @@ backtest::NextBarFillModel costs_none() {
   return backtest::NextBarFillModel(backtest::CommissionModel::none(), backtest::SlippageModel::none());
 }
 
+// The book's convention: a market order decided at close t fills at close t, the close of the bar before its fill bar
+// (the first bar, which has none, at its open).
+inline std::optional<Decimal64> decision_close(const backtest::MarketPriceInput& in) {
+  return in.previous_ ? std::optional<Decimal64>(in.previous_->close_) : in.next_.bar_.open_;
+}
+
 template <typename Strategy>
 inline backtest::Backtester<Strategy> replay(
   Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs
 ) {
-  backtest::Backtester<Strategy> engine(std::move(strategy), config_for(names, configs), costs_none());
+  backtest::Backtester<Strategy> engine(
+    std::move(strategy), config_for(names, configs), costs_none().with_market_price("decision-close", decision_close)
+  );
   std::vector<std::size_t> columns;
   for (const auto& name : names) {
     columns.push_back(data.col(name));
   }
-  std::vector<std::optional<Decimal64>> previous(names.size());
   for (std::size_t day = 0; day < data.dates_.size(); ++day) {
     for (std::size_t at = 0; at < names.size(); ++at) {
       // const auto& text = data.cell_[data.col(names[at])][day];
@@ -63,19 +70,9 @@ inline backtest::Backtester<Strategy> replay(
       if (text.empty()) {
         continue;
       }
-      auto bar = utils::bar_of(data.dates_[day], text);
-      // Each bar opens at the previous close, so a market order decided at close t fills at close t (the book's convention),
-      // and summarize counts it as held from that close.
-      if (previous[at]) {
-        bar.open_ = *previous[at];
-        if (atl::decimal_less(*previous[at], bar.low_)) {
-          bar.low_ = *previous[at];
-        }
-        if (atl::decimal_less(bar.high_, *previous[at])) {
-          bar.high_ = *previous[at];
-        }
-      }
-      previous[at] = bar.close_;
+      // Fed as they are: the fill model prices a market order at the decision close, and summarize counts it as held
+      // from that close.
+      const auto bar = utils::bar_of(data.dates_[day], text);
       engine.feed(strategy::make_bar_event(utils::id_of(names[at]), BarInterval::ONE_DAY, BarStamp::CLOSE, bar));
     }
   }
