@@ -35,7 +35,6 @@ struct LinearLongShort {
   int num_asset_, count_{0};
   Eigen::ArrayXd curr_, prev_, pct_change_, weights_;
   Eigen::Array<std::int64_t, Eigen::Dynamic, 1> held_;
-  bool initialized_{false};
 
   void init() {
     num_asset_ = params_.universe_.size();
@@ -47,11 +46,12 @@ struct LinearLongShort {
   }
 
   template <class Ctx>
+  void on_start(Ctx&) {
+    init();
+  }
+
+  template <class Ctx>
   void on_bars(Ctx& ctx, const BarSlice& slice) {
-    if (!initialized_) {
-      init();
-      initialized_ = true;
-    }
     prev_ = curr_;
     for (int i = 0; i < num_asset_; ++i) {
       if (const auto* bar = slice.find(params_.universe_[i])) {

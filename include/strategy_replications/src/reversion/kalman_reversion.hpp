@@ -45,7 +45,11 @@ struct KalmanReversion {
   bool units_long_{false};
   bool units_short_{false};
   statistics::KalmanFilter kf_;
-  bool kf_initialized_{false};
+
+  template <class Ctx>
+  void on_start(Ctx&) {
+    kf_.init(params_.delta_, params_.V_e_);
+  }
 
   template <class Ctx>
   void on_bars(Ctx& ctx, const BarSlice& slice) {
@@ -53,10 +57,6 @@ struct KalmanReversion {
     const auto* bar_x = slice.find(params_.instrument_x_);
     if (bar_y == nullptr || bar_x == nullptr) {
       return;
-    }
-    if (!kf_initialized_) {
-      kf_.init(params_.delta_, params_.V_e_);
-      kf_initialized_ = true;
     }
     kf_.forecast(analytics::to_scalar(bar_y->bar_.close_), analytics::to_scalar(bar_x->bar_.close_));
     math::Scalar resid = kf_.measurement_resid();

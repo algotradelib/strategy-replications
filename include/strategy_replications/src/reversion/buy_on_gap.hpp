@@ -50,7 +50,6 @@ struct BuyOnGap {
   Eigen::ArrayXd prev_close_, curr_close_, curr_open_, prev_low_, gap_;
   Eigen::Array<bool, Eigen::Dynamic, 1> gapped_;
   Eigen::VectorXi ret_id_;
-  bool initialized_{false};
   std::vector<bool> held_;
 
   // 0: (o, o, o, o), 1: (o, h, l, c), 2: (c, c, c, c)
@@ -183,11 +182,12 @@ struct BuyOnGap {
   }
 
   template <class Ctx>
+  void on_start(Ctx&) {
+    init();
+  }
+
+  template <class Ctx>
   void on_bars(Ctx& ctx, const BarSlice& slice) {
-    if (!initialized_) {
-      init();
-      initialized_ = true;
-    }
     switch (part_of(slice.period_end_)) {
       case 0:
         decide(ctx, slice);

@@ -36,7 +36,6 @@ struct IntradayLongShort {
   int num_asset_, count_{0};
   Eigen::ArrayXd open_, close_, pct_change_, weights_;
   Eigen::Array<std::int64_t, Eigen::Dynamic, 1> held_;
-  bool initialized_{false};
 
   static int part_of(std::chrono::system_clock::time_point end) {
     const auto midnight = std::chrono::floor<std::chrono::hours>(end);
@@ -109,11 +108,12 @@ struct IntradayLongShort {
   }
 
   template <class Ctx>
+  void on_start(Ctx&) {
+    init();
+  }
+
+  template <class Ctx>
   void on_bars(Ctx& ctx, const BarSlice& slice) {
-    if (!initialized_) {
-      init();
-      initialized_ = true;
-    }
     switch (part_of(slice.period_end_)) {
       case 0:
         decide(ctx, slice);
