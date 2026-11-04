@@ -46,10 +46,10 @@ backtest::NextBarFillModel costs_none() {
   return backtest::NextBarFillModel(backtest::CommissionModel::none(), backtest::SlippageModel::none());
 }
 
-// The book's convention: a market order decided at close t fills at close t, the close of the bar before its fill bar
-// (the first bar, which has none, at its open).
+// The book's convention: a market order decided at close t fills at close t, the price it was decided on
+// (with no price yet, at the next open).
 inline std::optional<Decimal64> decision_close(const backtest::MarketPriceInput& in) {
-  return in.previous_ ? std::optional<Decimal64>(in.previous_->close_) : in.next_.bar_.open_;
+  return in.decision_price_ ? in.decision_price_ : in.next_.bar_.open_;
 }
 
 template <typename Strategy>
