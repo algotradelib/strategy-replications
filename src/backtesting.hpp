@@ -6,6 +6,7 @@
 #include "./data.hpp"
 #include "./utils.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 
@@ -88,7 +89,7 @@ inline void replay_log(const std::string& tag, const backtest::ReplayResult& res
 
 inline void summarize(
   const TimeSeriesData& data, const std::vector<std::string>& names, const backtest::ReplayResult& result,
-  std::size_t start_day
+  std::size_t start_day, double gross = 0
 ) {
   int num_row = data.dates_.size();
   int num_col = data.names_.size();
@@ -128,8 +129,13 @@ inline void summarize(
   // Eigen::MatrixXd pnl = prev * pct_change.array();
   // Eigen::MatrixXd ret = pnl.array() / prev.cwiseAbs();
   Eigen::ArrayXd pnl = (position_prev * pct_change).rowwise().sum();
-  Eigen::ArrayXd ret = pnl / position_prev.cwiseAbs().rowwise().sum();
+  // Each day's P&L over the day's gross position, or over a fixed gross when one is given.
+  Eigen::ArrayXd ret =
+    gross > 0 ? Eigen::ArrayXd(pnl / gross) : Eigen::ArrayXd(pnl / position_prev.cwiseAbs().rowwise().sum());
   ret = ret.isNaN().select(0.0, ret);
+  // ret[i] is day i + 1's return (the first day has none), so the score starts at start_day's.
+  const auto skip = static_cast<Eigen::Index>(std::max<std::size_t>(start_day, 1) - 1);
+  ret = Eigen::ArrayXd(ret.tail(ret.size() - std::min(skip, ret.size())));
   double apr = std::pow((1 + ret).prod(), 252.0 / ret.size()) - 1;
   double ret_mean = ret.mean();
   // double ret_sd = std::sqrt((ret - ret_mean).matrix().norm() / (ret.size() - 1.0));
