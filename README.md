@@ -30,3 +30,13 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
 ```bash
 build/bin/atl_strategy -s <strategy_name> -d <data_path> ...
 ```
+
+## Acknowledgements
+
+This project was developed with the assistance of generative AI tools.
+
+## Disclaimer
+
+This project is released under the MIT license; see [LICENSE](LICENSE).
+The software is provided as is, without warranty of any kind, and the authors are not liable for any loss, including trading losses, arising from its use.
+Nothing in this repository is investment advice.
