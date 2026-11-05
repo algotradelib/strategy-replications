@@ -7,6 +7,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Hurst Exponent and Variance Ratio Test
   - [ ] Half-life of Mean Reversion
   - [ ] Cointegration and Johansen Test for Cointegration
+  - [x] Linear mean reversion on the Johansen portfolio, Example 2.8 (`johansen-linear`; the eigenvector and the half-life are estimated over the whole sample, so the figure carries look-ahead)
 - Mean Reversion Strategies (chapter 3)
   - [x] Linear mean-reverting (`linear`, `linear-log`, `ratio`)
   - [x] Bollinger Bands (`bollinger`)

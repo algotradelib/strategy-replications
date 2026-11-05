@@ -1,12 +1,51 @@
 #pragma once
 
 #include <strategy_replications/reversion>
+#include <strategy_replications/src/statistics/johansen.hpp>
 #include "./backtesting.hpp"
 #include "./utils.hpp"
 
+#include <cmath>
+#include <iostream>
 #include <string>
 
 namespace strategy_replications {
+
+// Example 2.8 Linear Mean Reversion on a Johansen Portfolio
+int johansen_linear(const std::string& path, std::vector<std::string> names, bool shorts) {
+  auto df = load_csv(path);
+  if (names.empty()) {
+    names = df.names_;
+  }
+  Eigen::MatrixXd x(df.values_.rows(), static_cast<Eigen::Index>(names.size()));
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    x.col(static_cast<Eigen::Index>(i)) = df.values_.col(static_cast<Eigen::Index>(df.col(names[i])));
+  }
+  const Eigen::VectorXd weights = statistics::johansen(x).eigenvectors_.col(0);
+  const double half_life = statistics::half_life(x * weights);
+  reversion::PortfolioReversion portfolio_reversion;
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    portfolio_reversion.params_.instruments_.push_back(utils::id_of(names[i]));
+    portfolio_reversion.params_.weights_.push_back(weights[static_cast<Eigen::Index>(i)]);
+  }
+  portfolio_reversion.params_.lookback_ = static_cast<std::size_t>(std::llround(half_life));
+  const auto precision = std::cout.precision(17);
+  std::cout << "eigenvector=";
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    std::cout << (i == 0 ? "" : ",") << weights[static_cast<Eigen::Index>(i)];
+  }
+  std::cout << " half-life=" << half_life << " lookback=" << portfolio_reversion.params_.lookback_ << std::endl;
+  std::cout.precision(precision);
+  std::cout << "Both estimated over the whole sample: the figure carries look-ahead." << std::endl;
+  backtesting::Config configs;
+  configs.shorts_ = shorts;
+  const auto tag = portfolio_reversion.params_.tag_; // read before the move
+  const auto engine = backtesting::replay(std::move(portfolio_reversion), df, names, configs);
+  const auto& result = engine.result();
+  backtesting::replay_log(tag, result);
+  backtesting::summarize(df, names, result, 0);
+  return 0;
+}
 
 // Example 3.1 Trading Price Spread, Log Price Spread, and Ratio
 template <reversion::LinearSpread Spread = reversion::LinearSpread::PRICE>

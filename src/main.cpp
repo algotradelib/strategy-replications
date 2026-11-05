@@ -11,6 +11,7 @@
 namespace {
 
 enum class Strategy : int {
+  JOHANSEN_LINEAR,
   LINEAR,
   LINEAR_LOG,
   LINEAR_LONGSHORT,
@@ -35,7 +36,8 @@ int main(int argc, char** argv) {
     {"linear-longshort", Strategy::LINEAR_LONGSHORT}, {"linear-longshort-vec", Strategy::LINEAR_LONGSHORT_VEC},
     {"ratio", Strategy::RATIO}, {"bollinger", Strategy::BOLLINGER}, {"kalman", Strategy::KALMAN},
     {"bog", Strategy::BUYONGAP}, {"bog-vec", Strategy::BUYONGAP_VEC}, {"longshort", Strategy::LONGSHORT},
-    {"longshort-vec", Strategy::LONGSHORT_VEC}, {"tsmom", Strategy::TSMOM}
+    {"longshort-vec", Strategy::LONGSHORT_VEC}, {"tsmom", Strategy::TSMOM},
+    {"johansen-linear", Strategy::JOHANSEN_LINEAR}
   };
   std::string path;
   // std::string y_name, x_name;
@@ -53,6 +55,8 @@ int main(int argc, char** argv) {
   app.add_flag("!--no-shorts", shorts, "Do not use shorts if specified");
   CLI11_PARSE(app, argc, argv);
   switch (strategy_tag) {
+    case Strategy::JOHANSEN_LINEAR:
+      return strategy_replications::johansen_linear(path, variables, shorts);
     case Strategy::LINEAR:
       return strategy_replications::linear<strategy_replications::reversion::LinearSpread::PRICE>(
         path, variables, shorts
