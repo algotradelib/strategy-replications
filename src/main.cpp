@@ -7,6 +7,7 @@
 #include "./reversion.hpp"
 #include "./reversion_intraday.hpp"
 #include "./ts_mom.hpp"
+#include "./xs_mom.hpp"
 
 namespace {
 
@@ -24,6 +25,7 @@ enum class Strategy : int {
   LONGSHORT,
   LONGSHORT_VEC,
   TSMOM,
+  XSMOM,
 };
 
 } // namespace
@@ -37,7 +39,7 @@ int main(int argc, char** argv) {
     {"ratio", Strategy::RATIO}, {"bollinger", Strategy::BOLLINGER}, {"kalman", Strategy::KALMAN},
     {"bog", Strategy::BUYONGAP}, {"bog-vec", Strategy::BUYONGAP_VEC}, {"longshort", Strategy::LONGSHORT},
     {"longshort-vec", Strategy::LONGSHORT_VEC}, {"tsmom", Strategy::TSMOM},
-    {"johansen-linear", Strategy::JOHANSEN_LINEAR}
+    {"johansen-linear", Strategy::JOHANSEN_LINEAR}, {"xsmom", Strategy::XSMOM}
   };
   std::string path;
   // std::string y_name, x_name;
@@ -87,6 +89,8 @@ int main(int argc, char** argv) {
       return strategy_replications::longshort<strategy_replications::LongshortFrequency::INTRADAY>(path);
     case Strategy::TSMOM:
       return strategy_replications::ts_mom(path, variables, shorts);
+    case Strategy::XSMOM:
+      return strategy_replications::xs_mom(path, shorts);
   }
   return 0;
 }

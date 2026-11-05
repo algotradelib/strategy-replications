@@ -1,3 +1,4 @@
 #pragma once
 
+#include "./src/momentum/cross_sectional_momentum.hpp"
 #include "./src/momentum/ts_momentum.hpp"
