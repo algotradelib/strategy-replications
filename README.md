@@ -23,6 +23,9 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Trading Currency Cross-Rates
   - [ ] Trading Futures Calendar Spread
   - [ ] Volatility futures versus Equity index futures
+- Opening gap and event-driven (chapter 7)
+  - [x] Opening gap of a future, Example 7.1 (`gap`)
+  - [x] Post-earnings announcement drift, Example 7.2 (`pead`)
 
 ```bash
 build/bin/atl_strategy -s <strategy_name> -d <data_path> ...

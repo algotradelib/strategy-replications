@@ -1,4 +1,6 @@
 #pragma once
 
 #include "./src/momentum/cross_sectional_momentum.hpp"
+#include "./src/momentum/opening_gap.hpp"
+#include "./src/momentum/post_earnings_drift.hpp"
 #include "./src/momentum/ts_momentum.hpp"

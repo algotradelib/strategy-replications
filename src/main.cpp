@@ -4,6 +4,7 @@
 #include <string>
 #include "./buy_on_gap.hpp"
 #include "./longshort.hpp"
+#include "./momentum_intraday.hpp"
 #include "./reversion.hpp"
 #include "./reversion_intraday.hpp"
 #include "./ts_mom.hpp"
@@ -26,6 +27,8 @@ enum class Strategy : int {
   LONGSHORT_VEC,
   TSMOM,
   XSMOM,
+  GAP,
+  PEAD,
 };
 
 } // namespace
@@ -39,7 +42,8 @@ int main(int argc, char** argv) {
     {"ratio", Strategy::RATIO}, {"bollinger", Strategy::BOLLINGER}, {"kalman", Strategy::KALMAN},
     {"bog", Strategy::BUYONGAP}, {"bog-vec", Strategy::BUYONGAP_VEC}, {"longshort", Strategy::LONGSHORT},
     {"longshort-vec", Strategy::LONGSHORT_VEC}, {"tsmom", Strategy::TSMOM},
-    {"johansen-linear", Strategy::JOHANSEN_LINEAR}, {"xsmom", Strategy::XSMOM}
+    {"johansen-linear", Strategy::JOHANSEN_LINEAR}, {"xsmom", Strategy::XSMOM}, {"gap", Strategy::GAP},
+    {"pead", Strategy::PEAD}
   };
   std::string path;
   // std::string y_name, x_name;
@@ -91,6 +95,10 @@ int main(int argc, char** argv) {
       return strategy_replications::ts_mom(path, variables, shorts);
     case Strategy::XSMOM:
       return strategy_replications::xs_mom(path, shorts);
+    case Strategy::GAP:
+      return strategy_replications::opening_gap(path, shorts);
+    case Strategy::PEAD:
+      return strategy_replications::pead(path, shorts);
   }
   return 0;
 }
