@@ -14,7 +14,7 @@ inline backtest::Backtester<Strategy> replay_intraday(
   const auto config = config_for(names, configs);
   const auto session = config.session_;
   backtest::Backtester<Strategy> engine(
-    std::move(strategy), config, costs_none().with_market_price("decision-close", decision_close)
+    std::move(strategy), config, costs_none().with_market_price(backtest::MarketPrice::DECISION_CLOSE)
   );
   for (std::size_t day = 0; day < close.dates_.size(); ++day) {
     // Each day as two daily bars stamped at the session's open and close: the open alone, a point (the strategy's

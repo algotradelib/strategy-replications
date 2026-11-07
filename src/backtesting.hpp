@@ -47,18 +47,14 @@ backtest::NextBarFillModel costs_none() {
   return backtest::NextBarFillModel(backtest::CommissionModel::none(), backtest::SlippageModel::none());
 }
 
-// The book's convention: a market order decided at close t fills at close t, the price it was decided on
-// (with no price yet, at the next open).
-inline std::optional<Decimal64> decision_close(const backtest::MarketPriceInput& in) {
-  return in.decision_price_ ? in.decision_price_ : in.next_.bar_.open_;
-}
-
 template <typename Strategy>
 inline backtest::Backtester<Strategy> replay(
   Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs
 ) {
+  // The book's convention: a market order decided at close t fills at close t, the price it was decided on.
   backtest::Backtester<Strategy> engine(
-    std::move(strategy), config_for(names, configs), costs_none().with_market_price("decision-close", decision_close)
+    std::move(strategy), config_for(names, configs),
+    costs_none().with_market_price(backtest::MarketPrice::DECISION_CLOSE)
   );
   std::vector<std::size_t> columns;
   for (const auto& name : names) {
