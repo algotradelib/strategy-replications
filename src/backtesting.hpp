@@ -51,7 +51,7 @@ template <typename Strategy>
 inline backtest::Backtester<Strategy> replay(
   Strategy strategy, TimeSeriesData& data, const std::vector<std::string>& names, const Config& configs
 ) {
-  // The book's convention: a market order decided at close t fills at close t, the price it was decided on.
+  // The book's convention: a market order decided at close t is priced at close t, the price it was decided on.
   backtest::Backtester<Strategy> engine(
     std::move(strategy), config_for(names, configs),
     costs_none().with_market_price(backtest::MarketPrice::DECISION_CLOSE)
