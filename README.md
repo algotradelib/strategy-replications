@@ -1,6 +1,6 @@
 # strategy-replications
 
-Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies and Their Rationale*. Wiley](https://www.amazon.com/dp/1118460146?lv=shuf&channelId=500&plpRedirect=mhFallback), using C++.
+Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies and Their Rationale*. Wiley](https://www.amazon.com/dp/1118460146), using C++.
 
 - Time series analytics (chapter 2)
   - [ ] Augmented Dickey-Fuller Test
@@ -16,13 +16,13 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [x] Buy-on-Gap Model (`bog`. `bog-vec` for vectorized without using `algotradelib`)
   - [x] Cross-Sectional Linear Long-Short (`linear-longshort`/`longshort`. `linear-longshort-vec`/`longshort-vec` for vectorized)
   - [ ] Arbitrage between an ETF and Component Stocks
-- Interday Momentum Strategies (chapter 6)
-  - [x] Time series momentum (`tsmom`)
-  - [x] Cross-sectional momentum (`xsmom`)
 - Mean Reversion of Currencies and Futures (chapter 5)
   - [ ] Trading Currency Cross-Rates
   - [ ] Trading Futures Calendar Spread
   - [ ] Volatility futures versus Equity index futures
+- Interday Momentum Strategies (chapter 6)
+  - [x] Time series momentum (`tsmom`)
+  - [x] Cross-sectional momentum (`xsmom`)
 - Opening gap and event-driven (chapter 7)
   - [x] Opening gap of a future, Example 7.1 (`gap`)
   - [x] Post-earnings announcement drift, Example 7.2 (`pead`)
